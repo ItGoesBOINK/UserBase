@@ -1,0 +1,16 @@
+{
+  "name": "userbase/userbase",
+  "description": "Secure User Account System built with PHP and MySQL",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "phpmailer/phpmailer": "^7.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "UserBase\\": "src/"
+    }
+  }
+}
