@@ -1,0 +1,40 @@
+services:
+  userbase:
+    build:
+      context: .
+    ports:
+      - "8081:80"
+    environment:
+      MYSQL_HOST: "db"
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: "userbase_test"
+      MYSQL_USER: "userbase_test"
+      MYSQL_PASSWORD: "local-test-only"
+      SMTP_HOST: ""
+      SMTP_PORT: ""
+      SMTP_USERNAME: ""
+      SMTP_PASSWORD: ""
+      MAIL_FROM_ADDRESS: ""
+      MAIL_FROM_NAME: ""
+      VERIFICATION_URL_BASE: "Http://localhost:5173.verify"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: "userbase_test"
+      MYSQL_USER: "userbase_test"
+      MYSQL_PASSWORD: "local-test-only"
+      MYSQL_ROOT_PASSWORD: "local-root-test-only"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - test-db-data:/var/lib/mysql
+
+volumes:
+  test-db-data:

@@ -25,22 +25,22 @@ final class Configuration
 
     public function __construct()
     {
-        $this->databaseHost = self::required('MYSQL_HOST');
-        $this->databasePort = self::required('MYSQL_PORT');
-        $this->databaseName = self::required('MYSQL_DATABASE');
-        $this->databaseUser = self::required('MYSQL_USER');
-        $this->databasePassword = self::required('MYSQL_PASSWORD');
+        $this->databaseHost = self::Required('MYSQL_HOST');
+        $this->databasePort = self::RequiredPort('MYSQL_PORT');
+        $this->databaseName = self::Required('MYSQL_DATABASE');
+        $this->databaseUser = self::Required('MYSQL_USER');
+        $this->databasePassword = self::Required('MYSQL_PASSWORD');
 
-        $this->smtpHost = self::optional('SMTP_HOST');
-        $this->smtpPort = self::optional('SMTP_PORT');
-        $this->smtpUsername = self::optional('SMTP_USERNAME');
-        $this->smtpPassword = self::optional('SMTP_PASSWORD');
-        $this->mailFromAddress = self::optional('MAIL_FROM_ADDRESS');
-        $this->mailFromName = self::optional('MAIL_FROM_NAME');
+        $this->smtpHost = self::Optional('SMTP_HOST');
+        $this->smtpPort = self::OptionalPort('SMTP_PORT');
+        $this->smtpUsername = self::Optional('SMTP_USERNAME');
+        $this->smtpPassword = self::Optional('SMTP_PASSWORD');
+        $this->mailFromAddress = self::Optional('MAIL_FROM_ADDRESS');
+        $this->mailFromName = self::Optional('MAIL_FROM_NAME');
 
-        $this->verificationUrlBase = self::optional('VERIFICATION_URL_BASE');
+        $this->verificationUrlBase = self::Optional('VERIFICATION_URL_BASE');
 
-        ValidateSMTPConfiguration();
+        $this->ValidateSMTPConfiguration();
     }
 
     public function IsEmailConfigured(): bool

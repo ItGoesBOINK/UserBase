@@ -1,0 +1,20 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+$ Git
+.git
+.gitignore
+
+$ Composer dependencies are installed inside the image
+vendor/
+
+$ Local development artifacts
+.idea/
+.DS_Store
+node_modules/
+
+# Tests run seperately
+tests/
+
