@@ -16,7 +16,7 @@ services:
       SMTP_PASSWORD: ""
       MAIL_FROM_ADDRESS: ""
       MAIL_FROM_NAME: ""
-      VERIFICATION_URL_BASE: "Http://localhost:5173.verify"
+      VERIFICATION_URL_BASE: "Http://localhost:5173/verify"
     depends_on:
       db:
         condition: service_healthy
