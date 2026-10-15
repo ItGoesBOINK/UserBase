@@ -6,13 +6,20 @@ namespace UserBase\Service;
 
 use PDOException;
 use DomainException;
+use UserBase\Config\Configuration;
+use UserBase\Service\EmailVerificationService;
 use UserBase\Exception\AccountConflictException;
 use UserBase\Exception\ValidationException;
 use UserBase\Repository\UserRepository;
 
 final class RegistrationService
 {
-    public function __construct(private readonly UserRepository $users) { }
+    public function __construct(
+        private readonly UserRepository $users,
+        private readonly EmailVerificationService $emailVerification,
+        private readonly IEmailSender $emailSender,
+        private readonly Configuration $config
+    ) { }
 
     /**
      * Register a new user and return the new user's ID.
@@ -49,7 +56,14 @@ final class RegistrationService
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         try {
-            return $this->users->Create($username, $usernameNormalized, $email, $emailNormalized, $passwordHash);
+
+            $userID = $this->users->Create(
+                $username,
+                $usernameNormalized,
+                $email,
+                $emailNormalized,
+                $passwordHash
+            );
         } catch (PDOException $e) {
 
             $mysqlErrorCode = $e->errorInfo[1] ?? null;
@@ -60,6 +74,14 @@ final class RegistrationService
 
             throw $e;
         }
+
+        $token = $this->emailVerification->IssueToken($userID);
+
+        $verificationURL = rtrim($this->config->verificationUrlBase, '/') . '?token=' . rawurlencode($token);
+
+        $this->emailSender->SendVerificationEmail($email, $username, $verificationURL);
+
+        return $userID;
     }
 
     private function ValidateUsername(string $username): void {

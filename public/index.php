@@ -14,6 +14,4 @@ try {
     ExceptionHandler::Handle($e);
 }
 
-
-
 ?>

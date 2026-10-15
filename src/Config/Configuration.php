@@ -45,12 +45,12 @@ final class Configuration
 
     public function IsEmailConfigured(): bool
     {
-        return this->$smtpHost !== null &&
-               this->$smtpPort !== null &&
-               this->$smtpUsername !== null &&
-               this->$smtpPassword !== null &&
-               this->$mailFromAddress !== null &&
-               this->$mailFromName !== null;
+        return $this->smtpHost !== null &&
+               $this->smtpPort !== null &&
+               $this->smtpUsername !== null &&
+               $this->smtpPassword !== null &&
+               $this->mailFromAddress !== null &&
+               $this->mailFromName !== null;
     }
 
     private function ValidateSMTPConfiguration(): void
@@ -80,7 +80,7 @@ final class Configuration
 
     private static function Required(string $name): string
     {
-        $value = self::optional($name);
+        $value = self::Optional($name);
 
         if ($value === null)
         {
@@ -103,7 +103,7 @@ final class Configuration
 
     private static function RequiredPort(string $name): int
     {
-        $value = self::required($name);
+        $value = self::Required($name);
 
         if (!ctype_digit($value) || (int) $value < 1 || (int) $value > 65535)
             throw new RuntimeException("Configuration {$name} must be a valid TCP port!");
@@ -113,7 +113,7 @@ final class Configuration
 
     private static function OptionalPort(string $name): ?int
     {
-        $value = self::optional($name);
+        $value = self::Optional($name);
 
         if ($value === null) return null;
 
