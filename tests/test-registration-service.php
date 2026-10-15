@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/test_base.php';
 
 use UserBase\Service\RegistrationService;
+use UserBase\Repository\UserRepository;
 
 function AssertRegistrationRejected(callable $operation, string $message): void
 {
