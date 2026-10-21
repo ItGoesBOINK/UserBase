@@ -106,30 +106,26 @@ final class EmailVerificationTokenRepository
         string $tokenID,
         DateTimeImmutable $usedAt
     ): bool {
-        try {
-            $sql = $this->connection->prepare(
-                'UPDATE email_verification_tokens
-                 SET used_at = :used_at
-                 WHERE id = :id
-                    AND used_at IS NULL
-                    AND invalidated_at IS NULL
-                    AND expires_at > :consumption_time'
-            );
+        $sql = $this->connection->prepare(
+             'UPDATE email_verification_tokens
+             SET used_at = :used_at
+             WHERE id = :id
+                AND used_at IS NULL
+                AND invalidated_at IS NULL
+                AND expires_at > :consumption_time'
+        );
 
-            $formattedUsedAt = $usedAt
-                ->setTimezone(new DateTimeZone('UTC'))
-                ->format('Y-m-d H:i:s.u');
+        $formattedUsedAt = $usedAt
+            ->setTimezone(new DateTimeZone('UTC'))
+            ->format('Y-m-d H:i:s.u');
 
-            $sql->execute([
-                'used_at' => $formattedUsedAt,
-                'id' => $tokenID,
-                'consumption_time' => $formattedUsedAt
-            ]);
-        } catch (Exception $e) {
-            return false;
-        }
+        $sql->execute([
+            'used_at' => $formattedUsedAt,
+            'id' => $tokenID,
+            'consumption_time' => $formattedUsedAt
+        ]);
 
-        return true;
+        return $sql->rowCount() === 1;
     }
 
     private function ToBinaryHash(string $tokenHash): string
