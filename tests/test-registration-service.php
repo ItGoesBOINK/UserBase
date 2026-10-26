@@ -2,10 +2,20 @@
 
 declare(strict_types=1);
 
+namespace UserBase\Tests;
+
 require_once __DIR__ . '/test_base.php';
+require_once __DIR__ . '/TestClock.php';
 
 use UserBase\Service\RegistrationService;
+use UserBase\Service\EmailVerificationService;
 use UserBase\Repository\UserRepository;
+use UserBase\Repository\EmailVerificationTokenRepository;
+use UserBase\Mail\PHPMailerEmailSender;
+use UserBase\Tests\TestClock;
+use DateTimeImmutable;
+use DateTimeZone;
+use DomainException;
 
 function AssertRegistrationRejected(callable $operation, string $message): void
 {
@@ -17,8 +27,15 @@ function AssertRegistrationRejected(callable $operation, string $message): void
     }
 }
 
+$testTime = new DateTimeImmutable('2026-01-01 12:00:00', new DateTimeZone('UTC'));
+$clock = new TestClock($testTime);
 $users = new UserRepository($pdo);
-$registration = new RegistrationService($users);
+$verificationRepo = new EmailVerificationTokenRepository($pdo);
+$emailSender = new PHPMailerEmailSender($config);
+$verificationService = new EmailVerificationService
+    ($pdo, $users, $verificationRepo, $clock);
+$registration = new RegistrationService
+    ($users, $verificationService, $emailSender, $config);
 
 try {
 

@@ -2,21 +2,31 @@
 
 declare(strict_types=1);
 
+use UserBase\Mail\PHPMailerEmailSender;
+
+use UserBase\Time\SystemClock;
 use UserBase\Config\Configuration;
 use UserBase\Database\DatabaseConnection;
+
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\JsonResponse;
 use UserBase\Http\Router;
+
 use UserBase\Repository\EmailVerificationTokenRepository;
 use UserBase\Repository\UserRepository;
+use UserBase\Repository\AuthSessionRepository;
+
 use UserBase\Service\RegistrationService;
 use UserBase\Service\EmailVerificationService;
 use UserBase\Service\IEmailSender;
-use UserBase\Mail\PHPMailerEmailSender;
-use UserBase\Time\SystemClock;
+use UserBase\Service\LoginService;
+use UserBase\Service\SessionService;
+
 use UserBase\Controller\HealthController;
 use UserBase\Controller\RegistrationController;
 use UserBase\Controller\EmailVerificationController;
+use UserBase\Controller\LoginController;
+
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -28,6 +38,7 @@ try {
     $connection = (new DatabaseConnection($config))->GetConnection();
     $users = new UserRepository($connection);
     $tokens = new EmailVerificationTokenRepository($connection);
+    $authSessions = new AuthSessionRepository($connection);
 
     // Build Services
     $emailSender = new PHPMailerEmailSender($config);
@@ -46,6 +57,10 @@ try {
         $config
     );
 
+    $sessions = new SessionService($authSessions, $clock);
+    $login = new LoginService($users, $sessions);
+
+
     // Build Router
     $healthCtrl =
     new HealthController();
@@ -56,12 +71,21 @@ try {
     $verificationCtrl =
     new EmailVerificationController($emailVerification);
 
+    $loginCtrl =
+    new LoginController($login);
+
     $router = new Router();
 
     // Health Check
     $router->Add(
         'GET', '/api/health',
         [$healthCtrl, 'GetStatus']
+    );
+
+    // Login
+    $router->Add(
+        'POST', '/api/login',
+        [$loginCtrl, 'Login']
     );
 
     // Register New Account

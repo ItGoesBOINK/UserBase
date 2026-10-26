@@ -6,6 +6,8 @@ require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 use UserBase\Database\DatabaseConnection;
 use UserBase\Repository\UserRepository;
+use UserBase\Validation\InputValidator;
+use UserBase\Time\TimeUtility;
 
 function AssertTest(bool $condition, string $message): void
 {
@@ -43,8 +45,10 @@ function RemoveTestUser($obj, $id)
     }
 }
 
+
 function IsValidToken($t): bool
-{ return preg_match('/\A[a-f0-9]{64}\z/', $t) === 1; }
+{ return InputValidator::IsValidVerificationToken($t); }
+
 
 $database = new DatabaseConnection($config);
 $pdo = $database->GetConnection();

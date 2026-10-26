@@ -11,6 +11,7 @@ use UserBase\Service\IEmailSender;
 use UserBase\Exception\AccountConflictException;
 use UserBase\Exception\ValidationException;
 use UserBase\Repository\UserRepository;
+use UserBase\Validation\InputValidator;
 
 final class RegistrationService
 {
@@ -42,8 +43,8 @@ final class RegistrationService
         $this->ValidateEmail($email);
         $this->ValidatePassword($password);
 
-        $usernameNormalized = strtolower($username);
-        $emailNormalized = strtolower($email);
+        $usernameNormalized = InputValidator::NormalizeUserName($username);
+        $emailNormalized = InputValidator::NormalizeEmail($email);
 
         // Friendly early checks. Database unique indexes remain
         // responsible for preventing duplicates under concurrency.
@@ -85,24 +86,20 @@ final class RegistrationService
     }
 
     private function ValidateUsername(string $username): void {
-        if (!preg_match('/\A[a-zA-Z0-9_.-]{8,64}\z/', $username)) {
+        if (!InputValidator::IsValidUserName($username)) {
             throw new ValidationException('Username must be 8-64 characters, and only contain letters, numbers, periods, dashes, and underscores.');
         }
     }
 
     private function ValidateEmail(string $email): void {
-        if (strlen($email) > 254 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+        if (!InputValidator::IsValidEmail($email)) {
             throw new ValidationException('A valid E-Mail address is required!');
         }
     }
 
     private function ValidatePassword(string $password): void {
-        if (strlen($password) < 12) {
-            throw new ValidationException('Password must be at least 12 characters long!');
-        }
-
-        if (strlen($password) > 1024) {
-            throw new ValidationException('Password exceeds the permitted length!');
+        if (!InputValidator::IsValidPassword($password)) {
+            throw new ValidationException('Password must be between 12 and 1024 characters long!');
         }
     }
 }

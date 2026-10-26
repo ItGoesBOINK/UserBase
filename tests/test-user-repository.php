@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/test_base.php';
 
+use UserBase\Repository\UserRepository;
+
 $users = new UserRepository($pdo);
 
 try {

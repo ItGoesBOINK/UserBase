@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use PDO;
+use UserBase\Validation\InputValidator;
+use UserBase\Time\TimeUtility;
 
 final class EmailVerificationTokenRepository
 {
@@ -34,9 +36,7 @@ final class EmailVerificationTokenRepository
 
         $sql->bindValue(':user_id', $userID, PDO::PARAM_STR);
         $sql->bindValue(':token_hash', $binaryHash, PDO::PARAM_LOB);
-        $sql->bindValue(':expires_at', $expiresAt
-                                        ->SetTimezone(new DateTimeZone('UTC'))
-                                        ->format('Y-m-d H:i:s.u'),
+        $sql->bindValue(':expires_at', TimeUtility::FormatTimestamp($expiresAt),
                                         PDO::PARAM_STR);
 
         $sql->execute();
@@ -91,9 +91,7 @@ final class EmailVerificationTokenRepository
         );
 
         $sql->execute([
-            'invalidated_at' => $invalidatedAt
-                ->setTimezone(new DateTimeZone('UTC'))
-                ->format('Y-m-d H:i:s.u'),
+            'invalidated_at' => TimeUtility::FormatTimestamp($invalidatedAt),
             'user_id' => $userID
         ]);
     }
@@ -115,9 +113,7 @@ final class EmailVerificationTokenRepository
                 AND expires_at > :consumption_time'
         );
 
-        $formattedUsedAt = $usedAt
-            ->setTimezone(new DateTimeZone('UTC'))
-            ->format('Y-m-d H:i:s.u');
+        $formattedUsedAt = TimeUtility::FormatTimestamp($usedAt);
 
         $sql->execute([
             'used_at' => $formattedUsedAt,
@@ -130,7 +126,7 @@ final class EmailVerificationTokenRepository
 
     private function ToBinaryHash(string $tokenHash): string
     {
-        if (!preg_match('/\A[a-f0-9]{64}\z/i', $tokenHash)) {
+        if (!InputValidator::IsValidVerificationToken($tokenHash)) {
             throw new InvalidArgumentException('Token Hash must be a 64-character hexadecimal string!');
         }
 

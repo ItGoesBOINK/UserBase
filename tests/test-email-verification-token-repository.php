@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/test_base.php';
 
-use DateTimeImmutable;
-use DateTimeZone;
+use UserBase\Repository\UserRepository;
 use UserBase\Repository\EmailVerificationTokenRepository;
 
 $users = new UserRepository($pdo);
@@ -87,7 +86,7 @@ try {
 
     // 6. Mark the first token as used
     $usedAt = $now->modify('+1 minute');
-    $tokens->MarkUsed($tokenID, $usedAt);
+    //$tokens->MarkUsed($tokenID, $usedAt);
 
     AssertTest(
             $tokens->MarkUsed($tokenID, $usedAt),
@@ -134,8 +133,8 @@ try {
     // 9. Attempting to mark an invalidated token as used must not
     // overwrite its invalidated state
     AssertTest(
-        $tokens->MarkUsed($secondTokenID, $now->modify('+3 minutes')),
-        'Unused token can be consumed successfully'
+        !$tokens->MarkUsed($secondTokenID, $now->modify('+3 minutes')),
+        'Invalidated Token cannot be marked as used'
     );
 
     $secondTokenAfterMarkUsed = $tokens->FindByTokenHash($secondHash);

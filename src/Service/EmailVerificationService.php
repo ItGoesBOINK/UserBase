@@ -11,6 +11,9 @@ use Throwable;
 use UserBase\Repository\EmailVerificationTokenRepository;
 use UserBase\Repository\UserRepository;
 use UserBase\Time\IClock;
+use UserBase\Validation\InputValidator;
+use UserBase\Security\TokenUtility;
+use UserBase\Time\TimeUtility;
 
 final class EmailVerificationService
 {
@@ -39,8 +42,10 @@ final class EmailVerificationService
         $now = $this->clock->Now();
         $expiresAt = $now->modify('+24 hours');
 
-        $rawToken = bin2hex(random_bytes(32));
-        $tokenHash = hash('sha256', $rawToken);
+        //$rawToken = bin2hex(random_bytes(32));
+        //$tokenHash = hash('sha256', $rawToken);
+        $rawToken = TokenUtility::NewToken();
+        $tokenHash = TokenUtility::TokenToHash($rawToken);
 
         $this->connection->beginTransaction();
 
@@ -60,11 +65,12 @@ final class EmailVerificationService
 
     public function VerifyToken(string $rawToken): void
     {
-        if (!preg_match('/\A[a-f0-9]{64}\z/i', $rawToken)) $this->NotifyInvalidOrExpired();
+        if (!InputValidator::IsValidVerificationToken($rawToken)) $this->NotifyInvalidOrExpired();
 
-        $tokenHash = hash('sha256', $rawToken);
+        //$tokenHash = hash('sha256', $rawToken);
+        $tokenHash = TokenUtility::TokenToHash($rawToken);
         $now = $this->clock->Now();
-
+        $utc = TimeUtility::UTC();
         $this->connection->beginTransaction();
 
         try {
@@ -72,7 +78,7 @@ final class EmailVerificationService
 
             if ($token === null) $this->NotifyInvalidOrExpired();
 
-            $expiresAt = new DateTimeImmutable($token['expires_at'], new DateTimeZone('UTC'));
+            $expiresAt = new DateTimeImmutable($token['expires_at'], $utc);
 
             if (
                 $token['used_at'] !== null

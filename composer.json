@@ -3,7 +3,7 @@
   "description": "Secure User Account System built with PHP and MySQL",
   "type": "project",
   "require": {
-    "php": "^8.2",
+    "php": "^8.4",
     "ext-pdo": "*",
     "ext-pdo_mysql": "*",
     "phpmailer/phpmailer": "^7.1"

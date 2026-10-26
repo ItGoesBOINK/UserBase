@@ -6,6 +6,7 @@ namespace UserBase\Repository;
 
 use DateTimeImmutable;
 use PDO;
+use UserBase\Time\TimeUtility;
 
 final class UserRepository
 {
@@ -113,9 +114,7 @@ final class UserRepository
         );
 
         $sql->execute([
-            'verified_at' => $verifiedAt
-                ->setTimezone(new \DateTimeZone('UTC'))
-                ->format('Y-m-d H:i:s.u'),
+            'verified_at' => TimeUtility::FormatTimestamp($verifiedAt),
             'id' => $userID
         ]);
     }
