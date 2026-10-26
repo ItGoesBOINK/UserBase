@@ -16,7 +16,8 @@ final class LoginController extends ControllerBase
         private readonly LoginService $login
     ) {}
 
-    public function Login(): void
+    #[\Override]
+    public function Execute(): void
     {
         try {
 

@@ -26,6 +26,7 @@ use UserBase\Controller\HealthController;
 use UserBase\Controller\RegistrationController;
 use UserBase\Controller\EmailVerificationController;
 use UserBase\Controller\LoginController;
+use UserBase\Controller\MeController;
 
 
 header('Content-Type: application/json; charset=utf-8');
@@ -74,37 +75,47 @@ try {
     $loginCtrl =
     new LoginController($login);
 
+    $meCtrl =
+    new MeController($sessions, $users);
+
+
     $router = new Router();
 
     // Health Check
     $router->Add(
         'GET', '/api/health',
-        [$healthCtrl, 'GetStatus']
+        $healthCtrl
+    );
+
+    // Get Current Authenticated User
+    $router->Add(
+        'GET', '/api/me',
+        $meCtrl
     );
 
     // Login
     $router->Add(
         'POST', '/api/login',
-        [$loginCtrl, 'Login']
+        $loginCtrl
     );
 
     // Register New Account
     $router->Add(
         'POST', '/api/register',
-        [$regCtrl, 'Register']
+        $regCtrl
     );
 
     // Verify E-Mail Address for New Account
     $router->Add(
         'POST', '/api/email-verifications/confirm',
-        [$verificationCtrl, 'Verify']
+        $verificationCtrl
     );
 
     // --> Dispatch Route
     try {
         $router->Dispatch(
             $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            $_SERVER['REQUEST_URL'] ?? '/'
+            $_SERVER['REQUEST_URI'] ?? '/'
         );
     } catch (\Throwable $err) {
         ExceptionHandler::Handle($err);

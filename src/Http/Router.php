@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace UserBase\Http;
 
+use Throwable;
+use UserBase\Controller\ControllerBase;
+use UserBase\Http\ExceptionHandler;
 
 final class Router
 {
@@ -12,7 +15,7 @@ final class Router
     public function Add(
         string $method,
         string $path,
-        callable $handler
+        ControllerBase $ctrl
     ): void {
         $method = strtoupper($method);
         $path = $this->NormalizePath($path);
@@ -23,7 +26,7 @@ final class Router
             );
         }
 
-        $this->routes[$path][$method] = $handler;
+        $this->routes[$path][$method] = $ctrl;
     }
 
     public function Dispatch(?string $method, ?string $path): void
@@ -33,7 +36,7 @@ final class Router
 
         $method = strtoupper($method);
 
-        $path = parse_url($uri, PHP_URL_PATH);
+        $path = parse_url($path, PHP_URL_PATH);
 
         if (!is_string($path)) {
             JsonResponse::Error(
@@ -64,14 +67,10 @@ final class Router
         }
 
         try {
-            ($this->routes[$path][$method])();
-        } catch (Exception $e)
+            $this->routes[$path][$method]->Execute();
+        } catch (Throwable $e)
         {
-            JsonResponse::Error(
-                'internal_server_error',
-                'An Internal Server Error occurred',
-                500
-            );
+            ExceptionHandler::Handle($e);
         }
     }
 

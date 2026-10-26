@@ -6,7 +6,8 @@ namespace UserBase\Controller;
 
 final class HealthController extends ControllerBase
 {
-    public function GetStatus(): void
+    #[\Override]
+    public function Execute(): void
     {
         $this->Success([
             'status' => 'ok',

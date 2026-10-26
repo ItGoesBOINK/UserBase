@@ -11,7 +11,9 @@ final class EmailVerificationController extends ControllerBase
         private readonly EmailVerificationService $verification
     ){}
 
-    public function Verify(): void
+
+    #[\Override]
+    public function Execute(): void
     {
         try {
             $body = json_decode(

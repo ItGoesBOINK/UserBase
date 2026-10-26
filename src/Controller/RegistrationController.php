@@ -12,7 +12,10 @@ final class RegistrationController extends ControllerBase
     public function __construct(
         private readonly RegistrationService $registration
     ){}
-    public function Register(): void
+
+
+    #[\Override]
+    public function Execute(): void
     {
         try {
             $body = json_decode(

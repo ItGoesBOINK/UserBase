@@ -8,6 +8,8 @@ use UserBase\Http\JsonResponse;
 
 abstract class ControllerBase
 {
+    abstract public function Execute(): void;
+
     protected function Success(
         array $data,
         int $status = 200
