@@ -164,13 +164,20 @@ try {
 
     echo "\nAll EmailVerificationService tests passed.\n";
 
-} catch (Throwable $e) {
+} finally {
+
+    // Delete tokens belonging to the temporary test users
     foreach ($userIDs as $userID) {
-        $sql = $pdo->prepare('DELETE FROM users WHERE id = :id');
-        $sql->execute(['id' => $userID]);
+        $sql = $pdo->prepare(
+            'DELETE FROM email_verification_tokens
+             WHERE user_id = :user_id'
+        );
+        $sql->execute(['user_id' => $userID]);
     }
 
-    throw $e;
+    foreach ($userIDs as $userID) {
+        RemoveTestUser($pdo, $userID);
+    }
 
     echo "\nTemporary users and associated tokes were cleaned up.\n";
 }
