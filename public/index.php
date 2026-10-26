@@ -27,6 +27,7 @@ use UserBase\Controller\RegistrationController;
 use UserBase\Controller\EmailVerificationController;
 use UserBase\Controller\LoginController;
 use UserBase\Controller\MeController;
+use UserBase\Controller\LogOutController;
 
 
 header('Content-Type: application/json; charset=utf-8');
@@ -78,6 +79,9 @@ try {
     $meCtrl =
     new MeController($sessions, $users);
 
+    $logoutCtrl =
+    new LogOutController($sessions);
+
 
     $router = new Router();
 
@@ -97,6 +101,12 @@ try {
     $router->Add(
         'POST', '/api/login',
         $loginCtrl
+    );
+
+    // Log-Out
+    $router->Add(
+        'POST', '/api/logout',
+        $logoutCtrl
     );
 
     // Register New Account
