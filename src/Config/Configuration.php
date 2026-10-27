@@ -23,6 +23,8 @@ final class Configuration
 
     public readonly ?string $verificationUrlBase;
 
+    public readonly array $corsAllowedOrigins;
+
     public function __construct()
     {
         $this->databaseHost = self::Required('MYSQL_HOST');
@@ -39,6 +41,8 @@ final class Configuration
         $this->mailFromName = self::Optional('MAIL_FROM_NAME');
 
         $this->verificationUrlBase = self::Optional('VERIFICATION_URL_BASE');
+
+        $this->corsAllowedOrigins = self::OptionalList('CORS_ALLOWED_ORIGINS');
 
         $this->ValidateSMTPConfiguration();
     }
@@ -121,6 +125,22 @@ final class Configuration
             throw new RuntimeException("Configuration {$name} must be a valid TCP port!");
 
         return (int) $value;
+    }
+
+    private static function OptionalList(string $name): array
+    {
+        $value = self::Optional($name);
+
+        if ($value === null) { return []; }
+
+        $items = array_map('trim', explode(',', $value));
+
+        return array_values(array_unique(
+            array_filter(
+                $items,
+                static fn (string $item): bool => $item !== ''
+            )
+        ));
     }
 
 

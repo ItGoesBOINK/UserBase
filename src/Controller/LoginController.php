@@ -21,8 +21,18 @@ final class LoginController extends ControllerBase
     {
         try {
 
+            $rawInput = file_get_contents('php://input');
+
+            if ($rawInput === false) {
+                $this->Error(
+                    'invalid_request',
+                    'Unable to read request body',
+                    400
+                );
+            }
+
             $body = json_decode(
-                file_get_contents('php://input'),
+                $rawInput,
                 true,
                 512,
                 JSON_THROW_ON_ERROR

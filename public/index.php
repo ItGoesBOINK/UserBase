@@ -11,6 +11,8 @@ use UserBase\Database\DatabaseConnection;
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\JsonResponse;
 use UserBase\Http\Router;
+use UserBase\Http\CorsHandler;
+use UserBase\Http\OriginValidator;
 
 use UserBase\Repository\EmailVerificationTokenRepository;
 use UserBase\Repository\UserRepository;
@@ -34,6 +36,9 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     require_once dirname(__DIR__) . '/src/bootstrap.php';
+
+    CorsHandler::Handle($config);
+    OriginValidator::Validate($config);
 
     // Initialize Connection and Repositories
     $clock = new SystemClock();

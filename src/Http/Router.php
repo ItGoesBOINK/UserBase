@@ -32,7 +32,7 @@ final class Router
     public function Dispatch(?string $method, ?string $path): void
     {
         $method ??= $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri ??= $_SERVER['REQUEST_URI'] ?? '/';
+        $path ??= $_SERVER['REQUEST_URI'] ?? '/';
 
         $method = strtoupper($method);
 
