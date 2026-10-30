@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UserBase\Controller;
 
 use UserBase\Service\SessionService;
+use UserBase\Http\RequestContext;
 
 final class LogOutController extends ControllerBase
 {
@@ -15,7 +16,7 @@ final class LogOutController extends ControllerBase
     ) {}
 
     #[\Override]
-    public function Execute(): void
+    public function Execute(RequestContext $context): void
     {
         // Revoke the server-side session, if a token was supplied
         $token = $_COOKIE[self::SESSION_COOKIE_NAME] ?? '';

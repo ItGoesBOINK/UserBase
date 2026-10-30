@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace UserBase\Controller;
 use UserBase\Http\JsonResponse;
+use UserBase\Http\RequestContext;
 
 
 abstract class ControllerBase
 {
-    abstract public function Execute(): void;
+    abstract public function Execute(RequestContext $context): void;
 
     protected function Success(
         array $data,

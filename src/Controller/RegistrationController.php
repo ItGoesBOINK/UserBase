@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UserBase\Controller;
 use PDO;
 use UserBase\Service\RegistrationService;
+use UserBase\Http\RequestContext;
 
 final class RegistrationController extends ControllerBase
 {
@@ -15,7 +16,7 @@ final class RegistrationController extends ControllerBase
 
 
     #[\Override]
-    public function Execute(): void
+    public function Execute(RequestContext $context): void
     {
         try {
             $body = json_decode(

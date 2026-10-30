@@ -11,6 +11,11 @@ use UserBase\Database\DatabaseConnection;
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\JsonResponse;
 use UserBase\Http\Router;
+use UserBase\Http\Route;
+use UserBase\Http\RoutePolicy;
+use UserBase\Http\RequestContext;
+use UserBase\Http\RequestPipeline;
+use UserBase\Http\AuthenticationRequirement;
 use UserBase\Http\CorsHandler;
 use UserBase\Http\OriginValidator;
 
@@ -87,61 +92,69 @@ try {
     $logoutCtrl =
     new LogOutController($sessions);
 
-
-    $router = new Router();
+    $pipeline = new RequestPipeline();
+    $router = new Router($pipeline);
 
     // Health Check
     $router->Add(
         'GET', '/api/health',
-        $healthCtrl
+        new Route(
+            $healthCtrl,
+            new RoutePolicy(AuthenticationRequirement::Public))
     );
 
     // Get Current Authenticated User
     $router->Add(
         'GET', '/api/me',
-        $meCtrl
+        new Route(
+            $meCtrl,
+            new RoutePolicy(AuthenticationRequirement::Required))
     );
 
     // Login
     $router->Add(
         'POST', '/api/login',
-        $loginCtrl
+        new Route(
+            $loginCtrl,
+            new RoutePolicy(AuthenticationRequirement::Public))
     );
 
     // Log-Out
     $router->Add(
         'POST', '/api/logout',
-        $logoutCtrl
+        new Route(
+            $logoutCtrl,
+            new RoutePolicy(AuthenticationRequirement::Public))
     );
 
     // Register New Account
     $router->Add(
         'POST', '/api/register',
-        $regCtrl
+        new Route(
+            $regCtrl,
+            new RoutePolicy(AuthenticationRequirement::Public))
     );
 
     // Verify E-Mail Address for New Account
     $router->Add(
         'POST', '/api/email-verifications/confirm',
-        $verificationCtrl
+        new Route(
+            $verificationCtrl,
+            new RoutePolicy(AuthenticationRequirement::Public))
     );
 
     // --> Dispatch Route
-    try {
-        $router->Dispatch(
-            $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            $_SERVER['REQUEST_URI'] ?? '/'
-        );
-    } catch (\Throwable $err) {
-        ExceptionHandler::Handle($err);
-    }
-
-
-    JsonResponse::Error(
-        'not_found',
-        'The requested end-point was not found',
-        404
+    $method  = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $uri     = $_SERVER['REQUEST_URI']    ?? '/';
+    $context = new RequestContext(
+        $method,
+        $uri,
+        array_change_key_case(getallheaders() ?: [], CASE_LOWER)
     );
+
+    //$router->Dispatch($method, $uri);
+    $router->Dispatch($context);
+
 
 } catch (Throwable $e) {
     ExceptionHandler::Handle($e);

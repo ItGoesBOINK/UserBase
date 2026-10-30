@@ -6,6 +6,7 @@ namespace UserBase\Controller;
 
 use UserBase\Repository\UserRepository;
 use UserBase\Service\SessionService;
+use UserBase\Http\RequestContext;
 
 final class MeController extends ControllerBase
 {
@@ -16,7 +17,7 @@ final class MeController extends ControllerBase
         private readonly UserRepository $users
     ) {}
 
-    private function NotifyAuthenticationRequired(): void
+    private function NotifyAuthenticationRequired(): never
     {
         $this->Error(
             'unauthorized',
@@ -26,7 +27,7 @@ final class MeController extends ControllerBase
     }
 
     #[\Override]
-    public function Execute(): void
+    public function Execute(RequestContext $context): void
     {
         // Token
         $token = $_COOKIE[self::SESSION_COOKIE_NAME] ?? null;

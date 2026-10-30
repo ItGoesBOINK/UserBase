@@ -6,6 +6,7 @@ namespace UserBase\Controller;
 
 use JsonException;
 use UserBase\Service\LoginService;
+use UserBase\Http\RequestContext;
 
 final class LoginController extends ControllerBase
 {
@@ -17,7 +18,7 @@ final class LoginController extends ControllerBase
     ) {}
 
     #[\Override]
-    public function Execute(): void
+    public function Execute(RequestContext $context): void
     {
         try {
 

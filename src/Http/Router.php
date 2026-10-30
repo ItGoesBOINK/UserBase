@@ -5,17 +5,23 @@ declare(strict_types=1);
 namespace UserBase\Http;
 
 use Throwable;
-use UserBase\Controller\ControllerBase;
 use UserBase\Http\ExceptionHandler;
+use UserBase\Http\RequestPipeline;
+use UserBase\Http\RequestContext;
 
 final class Router
 {
+    /** @var array<string, array<string, Route>> */
     private array $routes = [];
+
+    public function __construct(
+        private readonly RequestPipeline $pipeline
+    ) {}
 
     public function Add(
         string $method,
         string $path,
-        ControllerBase $ctrl
+        Route $route
     ): void {
         $method = strtoupper($method);
         $path = $this->NormalizePath($path);
@@ -26,17 +32,20 @@ final class Router
             );
         }
 
-        $this->routes[$path][$method] = $ctrl;
+        $this->routes[$path][$method] = $route;
     }
 
-    public function Dispatch(?string $method, ?string $path): void
+    public function Dispatch(RequestContext $context): void
     {
+        /*
         $method ??= $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $path ??= $_SERVER['REQUEST_URI'] ?? '/';
-
         $method = strtoupper($method);
-
+        $path ??= $_SERVER['REQUEST_URI'] ?? '/';
         $path = parse_url($path, PHP_URL_PATH);
+        */
+
+        $method = strtoupper($context->method);
+        $path = parse_url($context->requestURI, PHP_URL_PATH);
 
         if (!is_string($path)) {
             JsonResponse::Error(
@@ -67,7 +76,11 @@ final class Router
         }
 
         try {
-            $this->routes[$path][$method]->Execute();
+            //$this->routes[$path][$method]->controller->Execute();
+            $this->pipeline->Process(
+                $this->routes[$path][$method],
+                $context
+            );
         } catch (Throwable $e)
         {
             ExceptionHandler::Handle($e);

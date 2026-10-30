@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace UserBase\Security;
 
+use InvalidArgumentException;
+use UserBase\Validation\InputValidator;
+
 final class TokenUtility
 {
     public static function NewToken(): string
@@ -13,7 +16,15 @@ final class TokenUtility
     { return hash('sha256', $token); }
 
     public static function HashToBinary(string $hash): string
-    { return hex2bin($hash); }
+    {
+        if (!self::IsValidHash($hash)) {
+            throw new InvalidArgumentException('Invalid SHA-256 hash');
+        }
+        return hex2bin($hash);
+    }
+
+    public static function IsValidHash(string $hash): bool
+    { return InputValidator::IsValidSessionToken; }
 }
 
 ?>
