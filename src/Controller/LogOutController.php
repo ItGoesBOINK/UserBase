@@ -6,11 +6,10 @@ namespace UserBase\Controller;
 
 use UserBase\Service\SessionService;
 use UserBase\Http\RequestContext;
+use UserBase\Constants\Names;
 
 final class LogOutController extends ControllerBase
 {
-    private const string SESSION_COOKIE_NAME = 'userbase_session';
-
     public function __construct(
         private readonly SessionService $sessions
     ) {}
@@ -19,7 +18,7 @@ final class LogOutController extends ControllerBase
     public function Execute(RequestContext $context): void
     {
         // Revoke the server-side session, if a token was supplied
-        $token = $_COOKIE[self::SESSION_COOKIE_NAME] ?? '';
+        $token = $_COOKIE[Names::SESSION_COOKIE] ?? '';
 
         if (is_string($token)) {
             $this->sessions->Revoke($token);
@@ -32,7 +31,7 @@ final class LogOutController extends ControllerBase
         );
 
         setcookie(
-            self::SESSION_COOKIE_NAME,
+            Names::SESSION_COOKIE,
             '',
             [
                 'expires' => time() - 3600,

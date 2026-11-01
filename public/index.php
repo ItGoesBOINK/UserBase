@@ -8,6 +8,8 @@ use UserBase\Time\SystemClock;
 use UserBase\Config\Configuration;
 use UserBase\Database\DatabaseConnection;
 
+use UserBase\Security\Authentication\SessionAuthenticator;
+
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\JsonResponse;
 use UserBase\Http\Router;
@@ -92,7 +94,8 @@ try {
     $logoutCtrl =
     new LogOutController($sessions);
 
-    $pipeline = new RequestPipeline();
+    $authenticator = new SessionAuthenticator($sessions);
+    $pipeline = new RequestPipeline($authenticator);
     $router = new Router($pipeline);
 
     // Health Check
@@ -146,10 +149,14 @@ try {
     // --> Dispatch Route
     $method  = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     $uri     = $_SERVER['REQUEST_URI']    ?? '/';
+    $headers = array_change_key_case(getallheaders() ?: [], CASE_LOWER);
+    $cookies = $_COOKIE;
+
     $context = new RequestContext(
         $method,
         $uri,
-        array_change_key_case(getallheaders() ?: [], CASE_LOWER)
+        $headers,
+        $cookies
     );
 
     //$router->Dispatch($method, $uri);

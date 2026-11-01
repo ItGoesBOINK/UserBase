@@ -11,6 +11,7 @@ use UserBase\Service\SessionService;
 use UserBase\Tests\TestClock;
 use UserBase\Time\SystemClock;
 use UserBase\Security\TokenUtility;
+use UserBase\Http\APIErrors;
 
 /*
 $clock = new TestClock(
@@ -75,54 +76,6 @@ try {
             'status' => $status,
             'body' => $bodyJson
         ];
-    /*
-        $process = proc_open(
-            [PHP_BINARY, __DIR__ . '/me-controller-child.php'],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w']
-            ],
-            $pipes
-        );
-
-        if (!is_resource($process)) {
-            throw new RuntimeException(
-                'Failed to start MeController test process'
-            );
-        }
-
-        fwrite($pipes[0], json_encode([
-            'token' => $token,
-            'now' => $now->format('Y-m-d H:i:s.u')
-        ], JSON_THROW_ON_ERROR));
-
-        fclose($pipes[0]);
-
-        $body = stream_get_contents($pipes[1]);
-        fclose($pipes[1]);
-
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-
-        $exitCode = proc_close($process);
-
-        if ($exitCode !== 0) {
-            throw new RuntimeException(
-                "MeController child process failed\n" .
-                "Exit Code: [{$exitCode}]\n" .
-                "STDOUT: [{$body}]\n" .
-                "STDERR: [{$stderr}]\n"
-            );
-        }
-
-        $bodyJson = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
-
-        return [
-            'status' => (int) $matches[1],
-            'body' => $bodyJson
-        ];
-    */
     };
 
 
@@ -133,7 +86,7 @@ try {
 
     AssertTest(
         $response['status'] === 401 &&
-        $response['body']['error']['code'] === 'unauthorized',
+        $response['body']['error']['code'] === APIErrors::CODE__AUTH_REQUIRED,
         '(Me) rejects a request without a session cookie'
     );
 

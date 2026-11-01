@@ -7,10 +7,10 @@ namespace UserBase\Controller;
 use JsonException;
 use UserBase\Service\LoginService;
 use UserBase\Http\RequestContext;
+use UserBase\Constants\Names;
 
 final class LoginController extends ControllerBase
 {
-    private const string SESSION_COOKIE_NAME = 'userbase_session';
     private const int SESSION_LIFETIME_SECONDS = 86400;
 
     public function __construct(
@@ -70,11 +70,12 @@ final class LoginController extends ControllerBase
             $_SERVER['HTTPS'] !== 'off'
         );
 
+        $cookieName = Names::SESSION_COOKIE;
         setcookie(
-            self::SESSION_COOKIE_NAME,
+            $cookieName,
             $token,
             [
-                'expires' => time() + self::SESSION_LIFETIME_SECONDS,
+                'expires' => time() + $cookieName,
                 'path' => '/',
                 'secure' => $isSecure,
                 'httponly' => true,
