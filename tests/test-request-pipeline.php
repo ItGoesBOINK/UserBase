@@ -117,6 +117,9 @@ $output = $result['output'];
 $errors = $result['errors'];
 $exitCode = $result['exitCode'];
 
+//var_dump($output);
+//var_dump($errors);
+
 AssertTest(
     $exitCode === 0 &&
     str_contains($output, '"code":"AUTHENTICATION_REQUIRED"') &&

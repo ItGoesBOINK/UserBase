@@ -91,7 +91,7 @@ try {
     // 1.  Log-out revokes an active session
     $token = $sessionSvc->Create($userID);
     $beforeLogout = $request('GET', '/api/me', $token);
-    var_dump($beforeLogout);
+    //var_dump($beforeLogout);
 
     AssertTest(
         $beforeLogout['status'] === 200,

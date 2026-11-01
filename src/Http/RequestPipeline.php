@@ -19,6 +19,11 @@ final class RequestPipeline
     ): void {
         $auth = $this->auth->Authenticate($context);
 
+        // error_log('Auth Class: ' . get_class($auth));
+        // error_log('Auth User ID: ' . var_export($auth->userID, true));
+
+        // error_log('Pipeline Identity: ' . ($auth->IsAuthenticated() ? 'AUTHENTICATED' : 'ANONYMOUS'));
+
         $context = $context->WithAuthentication($auth);
 
         if (
