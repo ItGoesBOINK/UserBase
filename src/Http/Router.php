@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace UserBase\Http;
 
 use Throwable;
-use UserBase\Http\ExceptionHandler;
-use UserBase\Http\RequestPipeline;
-use UserBase\Http\RequestContext;
 
 final class Router
 {
@@ -37,13 +34,6 @@ final class Router
 
     public function Dispatch(RequestContext $context): void
     {
-        /*
-        $method ??= $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $method = strtoupper($method);
-        $path ??= $_SERVER['REQUEST_URI'] ?? '/';
-        $path = parse_url($path, PHP_URL_PATH);
-        */
-
         $method = strtoupper($context->method);
         $path = parse_url($context->requestURI, PHP_URL_PATH);
 
@@ -76,7 +66,6 @@ final class Router
         }
 
         try {
-            //$this->routes[$path][$method]->controller->Execute();
             $this->pipeline->Process(
                 $this->routes[$path][$method],
                 $context

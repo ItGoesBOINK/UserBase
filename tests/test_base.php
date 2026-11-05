@@ -5,7 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 require_once __DIR__ . '/Out.php';
 
-use UserBase\Database\DatabaseConnection;
+use UserBase\Database\DatabaseProxy;
 use UserBase\Repository\UserRepository;
 use UserBase\Validation\InputValidator;
 use UserBase\Time\TimeUtility;
@@ -83,7 +83,7 @@ function HasCookieHeader(array $headers): bool {
 }
 
 
-$database = new DatabaseConnection($config);
+$database = new DatabaseProxy($config);
 $pdo = $database->GetConnection();
 
 $userID = null;

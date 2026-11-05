@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace UserBase\Controller;
 use UserBase\Http\JsonResponse;
 use UserBase\Http\RequestContext;
+use UserBase\Http\IRequestHandler;
 
 
-abstract class ControllerBase
+abstract class ControllerBase implements IRequestHandler
 {
     abstract public function Execute(RequestContext $context): void;
 

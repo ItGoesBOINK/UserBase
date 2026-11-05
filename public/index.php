@@ -5,16 +5,13 @@ declare(strict_types=1);
 use UserBase\Mail\PHPMailerEmailSender;
 
 use UserBase\Time\SystemClock;
-use UserBase\Config\Configuration;
-use UserBase\Config\SessionSettings;
-use UserBase\Database\DatabaseConnection;
+use UserBase\Database\DatabaseProxy;
 
 use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialResolver;
 use UserBase\Security\Cookies\SessionCookie;
 
 use UserBase\Http\ExceptionHandler;
-use UserBase\Http\JsonResponse;
 use UserBase\Http\Router;
 use UserBase\Http\Route;
 use UserBase\Http\RoutePolicy;
@@ -30,7 +27,6 @@ use UserBase\Repository\AuthSessionRepository;
 
 use UserBase\Service\RegistrationService;
 use UserBase\Service\EmailVerificationService;
-use UserBase\Service\IEmailSender;
 use UserBase\Service\LoginService;
 use UserBase\Service\SessionService;
 
@@ -53,7 +49,7 @@ try {
     // Initialize Connection and Repositories
     $clock = new SystemClock();
     $cookie = new SessionCookie($config->IsSecure(), $sessionSettings);
-    $connection = (new DatabaseConnection($config))->GetConnection();
+    $connection = (new DatabaseProxy($config))->GetConnection();
     $users = new UserRepository($connection);
     $tokens = new EmailVerificationTokenRepository($connection);
     $authSessions = new AuthSessionRepository($connection);
@@ -84,7 +80,7 @@ try {
     $router = new Router($pipeline);
 
 
-    // Build Router
+    // Build Route Controllers (Request Handlers)
     $healthCtrl =
     new HealthController();
 
@@ -102,6 +98,9 @@ try {
 
     $logoutCtrl =
     new LogOutController($sessions, $credentialResolver, $cookie);
+
+
+    // Add Routes -----
 
     // Health Check
     $router->Add(

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace UserBase\Http;
 
-use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\IAuthenticator;
 
 final class RequestPipeline
@@ -18,12 +17,6 @@ final class RequestPipeline
         RequestContext $context
     ): void {
         $auth = $this->auth->Authenticate($context);
-
-        // error_log('Auth Class: ' . get_class($auth));
-        // error_log('Auth User ID: ' . var_export($auth->userID, true));
-
-        // error_log('Pipeline Identity: ' . ($auth->IsAuthenticated() ? 'AUTHENTICATED' : 'ANONYMOUS'));
-
         $context = $context->WithAuthentication($auth);
 
         if (
@@ -37,7 +30,7 @@ final class RequestPipeline
             );
         }
 
-        $route->controller->Execute($context);
+        $route->handler->Execute($context);
     }
 }
 

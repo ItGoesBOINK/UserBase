@@ -7,7 +7,7 @@ namespace UserBase\Database;
 use PDO;
 use UserBase\Config\Configuration;
 
-final class DatabaseConnection
+final class DatabaseProxy
 {
     private ?PDO $connection = null;
 

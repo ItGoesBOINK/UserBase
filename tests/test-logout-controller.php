@@ -210,6 +210,11 @@ try {
         'Bearer Log Out does not set or clear cookies'
     );
 
+    /**
+     * TODO: testing a request that supplies both credentials,
+     * and verifying the deliberate HTTP 400 response.
+     */
+
 
     HandleComplete(__FILE__);
 
