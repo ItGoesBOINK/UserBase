@@ -30,7 +30,7 @@ try {
         )
     );
 
-    $service = new SessionService($sessions, $clock);
+    $service = new SessionService($sessions, $clock, $sessionSettings);
 
     // 2. Create a session
     $rawToken = $service->Create($userID);

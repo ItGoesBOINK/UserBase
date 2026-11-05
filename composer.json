@@ -6,7 +6,8 @@
     "php": "^8.4",
     "ext-pdo": "*",
     "ext-pdo_mysql": "*",
-    "phpmailer/phpmailer": "^7.1"
+    "phpmailer/phpmailer": "^7.1",
+    "vlucas/phpdotenv": "^5.8"
   },
   "autoload": {
     "psr-4": {

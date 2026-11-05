@@ -6,9 +6,12 @@ use UserBase\Mail\PHPMailerEmailSender;
 
 use UserBase\Time\SystemClock;
 use UserBase\Config\Configuration;
+use UserBase\Config\SessionSettings;
 use UserBase\Database\DatabaseConnection;
 
 use UserBase\Security\Authentication\SessionAuthenticator;
+use UserBase\Security\Authentication\SessionCredentialResolver;
+use UserBase\Security\Cookies\SessionCookie;
 
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\JsonResponse;
@@ -49,6 +52,7 @@ try {
 
     // Initialize Connection and Repositories
     $clock = new SystemClock();
+    $cookie = new SessionCookie($config->IsSecure(), $sessionSettings);
     $connection = (new DatabaseConnection($config))->GetConnection();
     $users = new UserRepository($connection);
     $tokens = new EmailVerificationTokenRepository($connection);
@@ -71,7 +75,7 @@ try {
         $config
     );
 
-    $sessions = new SessionService($authSessions, $clock);
+    $sessions = new SessionService($authSessions, $clock, $sessionSettings);
     $login = new LoginService($users, $sessions);
 
 
@@ -86,15 +90,16 @@ try {
     new EmailVerificationController($emailVerification);
 
     $loginCtrl =
-    new LoginController($login);
+    new LoginController($login, $cookie, $sessions);
 
     $meCtrl =
-    new MeController($sessions, $users);
+    new MeController($users);
 
     $logoutCtrl =
     new LogOutController($sessions);
 
-    $authenticator = new SessionAuthenticator($sessions);
+    $credentialResolver = new SessionCredentialResolver($cookie);
+    $authenticator = new SessionAuthenticator($sessions, $credentialResolver);
     $pipeline = new RequestPipeline($authenticator);
     $router = new Router($pipeline);
 

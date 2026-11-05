@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/test_base.php';
+require_once __DIR__ . '/Out.php';
 
 use UserBase\Repository\UserRepository;
 use UserBase\Repository\EmailVerificationTokenRepository;
+use UserBase\Tests\Out;
 
 $users = new UserRepository($pdo);
 $tokens = new EmailVerificationTokenRepository($pdo);
@@ -69,18 +71,18 @@ try {
     try {
         $tokens->FindByTokenHash('Not-A-Valid-Hash');
 
-        throw new RuntimeException('FAIL: Malformed token hash should be rejected on Find');
+        throw new RuntimeException(Out::GetFail('Malformed token hash should be rejected on Find'));
     } catch (InvalidArgumentException $e) {
-        echo "PASS: Malformed token hash is rejected\n";
+        Out::Pass('Malformed token hash is rejected');
     }
 
     // 5.1 Reject invalid hashes for Create
     try {
         $tokens->Create($userID, 'not-a-valid-hash', $expiresAt);
 
-        throw new RuntimeException('FAIL: Malformed token hash should be rejected during creation');
+        throw new RuntimeException(Out::GetFail('Malformed token hash should be rejected during creation'));
     } catch (InvalidArgumentException $e) {
-        echo "PASS: Malformed token hash is rejected\n";
+        Out::Pass('Re-Injected Malformed token hash is rejected');
     }
 
 

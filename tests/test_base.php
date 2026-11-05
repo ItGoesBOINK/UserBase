@@ -3,20 +3,25 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
+require_once __DIR__ . '/Out.php';
 
 use UserBase\Database\DatabaseConnection;
 use UserBase\Repository\UserRepository;
 use UserBase\Validation\InputValidator;
 use UserBase\Time\TimeUtility;
+use UserBase\Tests\Out;
+
 
 function AssertTest(bool $condition, string $message): void
 {
     if (!$condition)
     {
-        throw new RuntimeException("FAIL: [{$message}]\n");
+        //throw new RuntimeException("FAIL: [{$message}]\n");
+        throw new RuntimeException(Out::GetFail($message));
     }
 
-    echo "PASS: [{$message}]\n";
+    //echo "PASS: [{$message}]\n";
+    echo Out::Pass($message);
 }
 
 function AssertDomainException(
@@ -26,11 +31,12 @@ function AssertDomainException(
     try {
         $operation();
     } catch (DomainException $e) {
-        echo "PASS: {$message}\n";
+        // echo "PASS: {$message}\n";
+        Out::Pass($message);
         return;
     }
 
-    throw new RuntimeException("FAIL: {$message}\n");
+    throw new RuntimeException(Out::GetFail($message));
 }
 
 function RemoveTestUser($obj, $id)
@@ -41,7 +47,8 @@ function RemoveTestUser($obj, $id)
         $sql = $obj->prepare('DELETE FROM users WHERE id = :id');
         $sql->execute(['id' => $id]);
 
-        echo "Test User Cleaned Up.\n";
+        //echo "Test User Cleaned Up.\n";
+        Out::Info("Test User Cleaned Up.");
     }
 }
 
@@ -60,8 +67,8 @@ $username = 'test_' . $suffix;
 $email = $username . '@example.test';
 $password = 'test-password-only';
 
-$usernameNormalized = strtolower($username);
-$emailNormalized = strtolower($email);
+$usernameNormalized = InputValidator::NormalizeUserName($username);
+$emailNormalized = InputValidator::NormalizeEmail($email);
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 ?>

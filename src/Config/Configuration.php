@@ -14,6 +14,8 @@ final class Configuration
     public readonly string $databaseUser;
     public readonly string $databasePassword;
 
+    public readonly SessionSettings $session;
+
     public readonly ?string $smtpHost;
     public readonly ?int $smtpPort;
     public readonly ?string $smtpUsername;
@@ -40,11 +42,36 @@ final class Configuration
         $this->mailFromAddress = self::Optional('MAIL_FROM_ADDRESS');
         $this->mailFromName = self::Optional('MAIL_FROM_NAME');
 
+        $this->session = new SessionSettings(
+            self::Required('SESSION_COOKIE_NAME'),
+            self::Required('SESSION_COOKIE_PATH'),
+            self::Required('SESSION_COOKIE_SAME_SITE'),
+            self::RequiredBool('SESSION_COOKIE_HTTP_ONLY'),
+            self::RequiredInt('SESSION_LIFETIME')
+        );
+
         $this->verificationUrlBase = self::Optional('VERIFICATION_URL_BASE');
 
         $this->corsAllowedOrigins = self::OptionalList('CORS_ALLOWED_ORIGINS');
 
         $this->ValidateSMTPConfiguration();
+    }
+
+    private const string HTTPS = 'HTTPS';
+    private const string off = 'off';
+
+    public function HTTPS(): string { $_SERVER[self::HTTPS]; }
+
+    public function HasHttpsProp(): bool
+    { return isset($_SERVER[self::HTTPS]); }
+
+    public function HttpsIsNotOff(): bool
+    { return $this->HTTP() !== self::off; }
+
+    public function IsSecure(): bool
+    {
+        return $this->HasHttpsProp() &&
+               $this->HttpsIsNotOff();
     }
 
     public function IsEmailConfigured(): bool
@@ -94,9 +121,39 @@ final class Configuration
         return $value;
     }
 
+    private static function RequiredBool(string $name): bool
+    {
+        $val = self::Required($name);
+        $result = filter_var(
+            $val,
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE
+        );
+        if ($result === null) {
+            throw new RuntimeException(
+                "Configuration {$name} must be a valid boolean"
+            );
+        }
+
+        return $result;
+    }
+
+    private static function RequiredInt(string $name): int
+    {
+        $val = self::Required($name);
+        if (!ctype_digit($val)) {
+            throw new RuntimeException(
+                "Configuration {$name} must be a valid integer"
+            );
+        }
+
+        return (int) $val;
+    }
+
     private static function Optional(string $name): ?string
     {
-        $value = getenv($name);
+        //$value = getenv($name);
+        $value = $_ENV[$name] ?? null;
 
         if ($value === false || trim($value) === '' ) {
             return null;

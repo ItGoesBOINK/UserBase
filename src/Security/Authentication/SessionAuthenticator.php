@@ -7,60 +7,55 @@ namespace UserBase\Security\Authentication;
 use UserBase\Http\AuthenticationContext;
 use UserBase\Http\RequestContext;
 use UserBase\Service\SessionService;
-use UserBase\Constants\Names;
+use UserBase\Config\SessionSettings;
 
 final class SessionAuthenticator implements IAuthenticator
 {
 
     public function __construct(
-        private readonly SessionService $sessions
+        private readonly SessionService $sessions,
+        private readonly SessionCredentialResolver $credentialResolver
     ) {}
 
     public function Authenticate(
         RequestContext $context
     ): AuthenticationContext {
-        $token = $context->GetCookie(Names::SESSION_COOKIE);
 
-        // error_log('Session cookie received: ' . ($token !== null ? 'YES' : 'NO'));
+        $credential = $this->credentialResolver->Resolve($context);
 
-        if ($token === null)
-        { return AuthenticationContext::Anonymous(); }
+        //error_log('Cookie received: ' . ($context->GetCookie('userbase_session') !== null ? 'YES' : 'NO'));
+        //error_log('Credential resolved: ' . ($credential !== null ? 'YES' : 'NO'));
+        //error_log('Credential type: ' . ($credential?->type->name ?? 'NONE'));
 
-        $session = $this->sessions->Validate($token);
+        if ($credential === null)
+            { return AuthenticationContext::Anonymous(); }
 
-        // error_log('Session Data: ' . print_r($session, true));
+        $session = $this->sessions->Validate($credential->token);
 
-        // error_log('Session Validation: ' . ($session !== null ? 'VALID' : 'INVALID'));
+        //error_log('Session validated: ' . ($session !== null ? 'YES' : 'NO'));
 
         if ($session === null)
-        { return AuthenticationContext::Anonymous(); }
+            { return AuthenticationContext::Anonymous(); }
 
         $userID = $session['user_id'] ?? null;
-        //error_log('Authenticator User ID: ' . $userID);
+
+        //error_log('Session user_id: '. var_export($userID, true));
+        //error_log('Session user_id type: '. gettype($userID));
 
         $isInt = is_int($userID);
-        $isPositive = $userID >= 0;
-        $isEmpty = $userID === '';
-        $validID = $isInt && $isPositive && !$isEmpty;
+        $isStr = is_string($userID);
+        $isDigit = ctype_digit((string)$userID);
+        $zeroOrLess = (int)$userID <= 0;
 
+        $isInvalid = (!$isInt && !$isStr) ||
+                   !$isDigit || $zeroOrLess;
 
-        /*
-        error_log('ID is Empty: ' . ($isEmpty ? '[EMPTY]' : $userID));
-        error_log('ID is Int: ' . ($isInt ? $userID : '[NOT AN INT]'));
-        error_log('ID is Positive: ' . ($isPositive ? 'POSITIVE' : 'NEGATIVE'));
-        error_log('Valid ID: ' . ($validID ? 'YES' : 'NO'));
-        */
+        if ($isInvalid)
+            { return AuthenticationContext::Anonymous(); }
 
-        if (!$validID)
-        { return AuthenticationContext::Anonymous(); }
+        //error_log('Authentication context: AUTHENTICATED');
 
-        $auth = AuthenticationContext::Authenticated((string) $userID);
-        $isAuth = $auth->IsAuthenticated();
-        $label = $isAuth ? 'AUTHENTICATED' : 'ANONYMOUS';
-
-        //error_log('Authenticator Identity: ' . $label);
-
-        return $auth;
+        return AuthenticationContext::Authenticated((string) $userID);
     }
 }
 

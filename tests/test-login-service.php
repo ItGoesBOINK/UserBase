@@ -26,7 +26,7 @@ $clock = new TestClock(
     )
 );
 
-$sessions = new SessionService($sessionRepository, $clock);
+$sessions = new SessionService($sessionRepository, $clock, $sessionSettings);
 $login = new LoginService($users, $sessions);
 
 try {

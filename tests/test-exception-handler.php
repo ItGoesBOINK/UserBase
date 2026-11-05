@@ -2,22 +2,26 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/src/bootstrap.php';
+require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/Out.php';
+
+use UserBase\Tests\Out;
 
 function AssertTest(bool $condition, string $message): void
 {
-    if (!$condition) { throw new RuntimeException("FAIL: [{$message}]\n"); }
-    echo "PASS: [{$message}]\n";
+    if (!$condition) { throw new RuntimeException(Out::GetFail($message)); }
+    Out::Pass($message);
 }
 
 function AssertDomainException(callable $operation, string $message): void {
     try {
         $operation();
     } catch (DomainException $e) {
-        echo "PASS: {$message}\n";
+        Out::Pass($message);
+        //echo "PASS: {$message}\n";
         return;
     }
-    throw new RuntimeException("FAIL: {$message}\n");
+    throw new RuntimeException(Out::GetFail($message));
 }
 
 $cases = [

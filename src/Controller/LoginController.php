@@ -6,15 +6,17 @@ namespace UserBase\Controller;
 
 use JsonException;
 use UserBase\Service\LoginService;
+use UserBase\Service\SessionService;
 use UserBase\Http\RequestContext;
-use UserBase\Constants\Names;
+use UserBase\Security\Cookies\SessionCookie;
+
 
 final class LoginController extends ControllerBase
 {
-    private const int SESSION_LIFETIME_SECONDS = 86400;
-
     public function __construct(
-        private readonly LoginService $login
+        private readonly LoginService $login,
+        private readonly SessionCookie $sessionCookie,
+        private readonly SessionService $sessionService
     ) {}
 
     #[\Override]
@@ -60,30 +62,42 @@ final class LoginController extends ControllerBase
             );
         }
 
+        $transport = $body['session_transport'] ?? 'cookie';
+
+        if (
+            !is_string($transport) ||
+            !in_array($transport, ['cookie', 'bearer'], true)
+        ) {
+            $this->Error(
+                'invalid_request',
+                'Property "session_transport" must be either "cookie" or "bearer"',
+                400
+            );
+        }
+
         $token = $this->login->Login(
             $body['username'],
             $body['password']
         );
 
-        $isSecure = (
-            isset($_SERVER['HTTPS']) &&
-            $_SERVER['HTTPS'] !== 'off'
-        );
+        if ($transport === 'cookie') {
+            if (!$this->sessionCookie->Set($token)) {
+                $this->Error(
+                    'session_cookie_error',
+                    'Unable to establish the session cookie',
+                    500
+                );
+            }
 
-        $cookieName = Names::SESSION_COOKIE;
-        setcookie(
-            $cookieName,
-            $token,
-            [
-                'expires' => time() + $cookieName,
-                'path' => '/',
-                'secure' => $isSecure,
-                'httponly' => true,
-                'samesite' => 'Lax'
-            ]
-        );
+            $this->Success(['message' => 'Login Successful']);
+        }
 
-        $this->Success(['message' => 'Login Successful']);
+        $this->Success([
+            'message' => 'Login Successful',
+            'session_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => $this->sessionService->GetLifetimeSeconds()
+        ]);
     }
 }
 

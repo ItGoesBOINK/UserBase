@@ -8,15 +8,23 @@ use UserBase\Repository\AuthSessionRepository;
 use UserBase\Time\IClock;
 use UserBase\Validation\InputValidator;
 use UserBase\Security\TokenUtility;
+use UserBase\Config\SessionSettings;
 
 final class SessionService
 {
-    private const int SESSION_LIFETIME_SECONDS = 86400;
-
     public function __construct(
         private readonly AuthSessionRepository $sessions,
-        private readonly IClock $clock
+        private readonly IClock $clock,
+        private readonly SessionSettings $sessionSettings
     ) {}
+
+
+    /**
+     * Returns the session lifetime in seconds.
+     */
+    public function GetLifetimeSeconds(): int
+    { return $this->sessionSettings->lifetimeSeconds; }
+
 
     /**
      * Create a session and return its raw token.
@@ -31,7 +39,7 @@ final class SessionService
 
         $now = $this->clock->Now();
         $expiresAt = $now->modify(
-            '+' . self::SESSION_LIFETIME_SECONDS . ' seconds'
+            '+' . $this->sessionSettings->lifetimeSeconds . ' seconds'
         );
 
         $this->sessions->Create(

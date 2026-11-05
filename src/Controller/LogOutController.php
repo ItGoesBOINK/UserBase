@@ -18,9 +18,9 @@ final class LogOutController extends ControllerBase
     public function Execute(RequestContext $context): void
     {
         // Revoke the server-side session, if a token was supplied
-        $token = $_COOKIE[Names::SESSION_COOKIE] ?? '';
+        $token = $context->GetCookie(Names::SESSION_COOKIE) ?? '';
 
-        if (is_string($token)) {
+        if ($token !== null) {
             $this->sessions->Revoke($token);
         }
 

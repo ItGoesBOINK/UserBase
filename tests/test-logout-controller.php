@@ -16,7 +16,7 @@ use UserBase\Validation\InputValidator;
 $clock = new SystemClock();
 $users = new UserRepository($pdo);
 $authSessionRepo = new AuthSessionRepository($pdo);
-$sessionSvc = new SessionService($authSessionRepo, $clock);
+$sessionSvc = new SessionService($authSessionRepo, $clock, $sessionSettings);
 
 $userID = null;
 

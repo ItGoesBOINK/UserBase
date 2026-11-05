@@ -22,7 +22,8 @@ function AssertRegistrationRejected(callable $operation, string $message): void
     try {
         $operation();
     } catch (DomainException $e) {
-        echo "PASS: [{$message}]\n";
+        //echo "PASS: [{$message}]\n";
+        Out::Pass($message);
         return;
     }
 }

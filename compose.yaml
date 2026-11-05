@@ -5,6 +5,8 @@ services:
       - "8081:80"
     env_file:
       - .env
+    volumes:
+      - ./.env:/var/www/html/.env:ro
     depends_on:
       db:
         condition: service_healthy
