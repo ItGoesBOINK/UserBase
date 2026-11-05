@@ -172,7 +172,7 @@ try {
     );
 
 
-    echo "\nAll Log Out tests passed\n";
+    HandleComplete(__FILE__);
 
 } finally {
     if ($userID !== null) {

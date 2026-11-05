@@ -144,6 +144,6 @@ AssertTest(
     'Required route allows authenticated requests'
 );
 
-echo "\nAll Request Pipeline tests passed.\n";
+HandleComplete(__FILE__);
 
 ?>

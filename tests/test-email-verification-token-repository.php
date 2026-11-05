@@ -149,7 +149,7 @@ try {
     );
 
 
-    echo "\nAll EmailVerificationTokenRepository tests passed.\n";
+    HandleComplete(__FILE__);
 
 } finally {
     RemoveTestUser($pdo, $userID);

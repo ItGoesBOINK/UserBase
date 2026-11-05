@@ -112,6 +112,6 @@ AssertTest(
     'Ignores malformed Bearer Header'
 );
 
-echo "\nAll SessionCredentialResolver tests passed.\n";
+HandleComplete(__FILE__);
 
 ?>

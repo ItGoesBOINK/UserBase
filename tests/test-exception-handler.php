@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/test_base.php';
 require_once __DIR__ . '/Out.php';
 
 use UserBase\Tests\Out;
 
+/*
 function AssertTest(bool $condition, string $message): void
 {
     if (!$condition) { throw new RuntimeException(Out::GetFail($message)); }
@@ -23,6 +25,7 @@ function AssertDomainException(callable $operation, string $message): void {
     }
     throw new RuntimeException(Out::GetFail($message));
 }
+*/
 
 $cases = [
     [
@@ -138,7 +141,7 @@ PHP,
     }
 }
 
-echo "\nAll ExceptionHandler tests passed.\n";
+HandleComplete(__FILE__);
 
 
 

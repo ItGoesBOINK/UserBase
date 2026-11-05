@@ -73,7 +73,7 @@ try {
         'E-Mail Verification Time-Stamp is saved'
     );
 
-    echo "\nAll UserRepository tests passed.\n";
+    HandleComplete(__FILE__);
 
 } finally {
     RemoveTestUser($pdo, $userID);

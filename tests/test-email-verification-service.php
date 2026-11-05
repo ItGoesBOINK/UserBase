@@ -162,7 +162,7 @@ try {
         fn () => $service->IssueToken($userID),
         'Issuing a token for a verified account is rejected');
 
-    echo "\nAll EmailVerificationService tests passed.\n";
+    HandleComplete(__FILE__);
 
 } finally {
 

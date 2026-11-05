@@ -122,7 +122,7 @@ try {
         'Login accepts a user name with different capitalization'
     );
 
-    echo "\nAll LoginService tests passed.\n";
+    HandleComplete(__FILE__);
 
 } finally {
     RemoveTestUser($pdo, $userID);

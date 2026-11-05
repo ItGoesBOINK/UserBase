@@ -81,8 +81,11 @@ function HasCookieHeader(array $headers): bool {
     return HasResponseHeader($headers, 'Set-Cookie: userbase_session=');
 }
 
+
 $users = new UserRepository($pdo);
 $clock = new SystemClock();
+
+$unverifiedUserID = null;
 $jsonHeaders = [
    'Content-Type: application/json',
    'Accept: application/json'
@@ -292,18 +295,46 @@ try {
     );
 
     AssertTest(
-        $response['status'] === 400,
+        $response['status'] === 422,
         'Invalid Login credentials returns HTTP 400'
     );
 
 
     // 9	Unverified email
     //      expected: Authentication failure
-    $unverifiedUserID = null;
     $unverifiedUsername = $username . '_unverified';
     $unverifiedEmail = $unverifiedUsername . '@test.test';
 
+    $unverifiedUserID = $users->Create(
+        $unverifiedUsername,
+        InputValidator::NormalizeUserName($unverifiedUsername),
+        $unverifiedEmail,
+        InputValidator::NormalizeUserName($unverifiedEmail),
+        $passwordHash
+    );
 
+    $json = json_encode([
+        'username' => $unverifiedUsername,
+        'password' => $password,
+    ], JSON_THROW_ON_ERROR);
+
+    $response = $Request(
+        'POST', '/api/login',
+        $json, $jsonHeaders
+    );
+
+    //var_dump($response);
+    AssertTest(
+        $response['status'] === 422,
+        'Unverified E-Mail returns HTTP 400'
+    );
+
+    AssertTest(
+        ($response['body']['error']['code'] ?? null) === 'validation_failed',
+        'Unverified E-Mail returns validation_failed'
+    );
+
+    HandleComplete(__FILE__);
 
 } finally {
 
@@ -313,7 +344,15 @@ try {
         $sql = $pdo->prepare(
             'DELETE FROM auth_sessions WHERE user_id = :user_id'
         );
-        $sql->execute(['user_id' => $userID]);
+        $sql->execute(['user_id' => $unverifiedUserID]);
+
+        if ($unverifiedUserID !== null) {
+            $sql = $pdo->prepare(
+                'DELETE FROM auth_sessions WHERE user_id = :user_id'
+            );
+            $sql->execute(['user_id' => $unverifiedUserID]);
+            RemoveTestUser($pdo, $unverifiedUserID);
+        }
 
         RemoveTestUser($pdo, $userID);
     }

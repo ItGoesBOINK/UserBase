@@ -134,7 +134,7 @@ try {
         'Short Name created no account'
     );
 
-    echo "\nAll RegistrationService tests passed.\n";
+    HandleComplete(__FILE__);
 } finally {
     RemoveTestUser($pdo, $userID);
 }

@@ -56,6 +56,17 @@ function RemoveTestUser($obj, $id)
 function IsValidToken($t): bool
 { return InputValidator::IsValidVerificationToken($t); }
 
+function ExtractFileName(string $path): string {
+    $a = strrpos($path, '/test-') + 6;
+    $l = strrpos($path, '.') - $a;
+    return substr($path, $a, $l);
+}
+
+function HandleComplete($name): void {
+    $msg = "\nAll [" . ExtractFileName($name) . "] tests passed.\n";
+    Out::ColorLine(Out::GREEN, $msg);
+}
+
 
 $database = new DatabaseConnection($config);
 $pdo = $database->GetConnection();

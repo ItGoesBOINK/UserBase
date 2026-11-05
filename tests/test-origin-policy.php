@@ -59,6 +59,6 @@ foreach ($tests as $name => $passed) {
 }
 
 if ($failed > 0) throw new RuntimeException('Some OriginPolicy tests failed');
-else echo "\nAll OriginPolicy tests passed\n";
+else HandleComplete(__FILE__);
 
 ?>

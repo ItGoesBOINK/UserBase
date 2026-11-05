@@ -175,7 +175,7 @@ try {
     );
 
 
-    echo "\nAll MeController tests passed.\n";
+    HandleComplete(__FILE__);
 
 } finally {
     if ($userID !== null) {

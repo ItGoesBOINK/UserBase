@@ -104,7 +104,7 @@ try {
         'Expired session is rejected'
     );
 
-    echo "\nAll SessionService tests passed.\n";
+    HandleComplete(__FILE__);
 
 } finally {
     RemoveTestUser($pdo, $userID);
