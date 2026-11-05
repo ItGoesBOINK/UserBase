@@ -27,12 +27,17 @@ $userID = null;
 $request = function (
     string $method,
     string $path,
-    ?string $token = null
+    ?string $cookieToken = null,
+    ?string $bearerToken = null
 ): array {
     $headers = [];
 
-    if ($token !== null) {
-        $headers[] = "Cookie: userbase_session={$token}";
+    if ($cookieToken !== null) {
+        $headers[] = "Cookie: userbase_session={$cookieToken}";
+    }
+
+    if ($bearerToken !== null) {
+        $headers[] = "Authorization: Bearer {$bearerToken}";
     }
 
     $context = stream_context_create([
@@ -64,6 +69,7 @@ $request = function (
 
     $status = (int) ($matches[1] ?? 0);
 
+    //var_dump($body);
     $bodyJson = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 
     return [
@@ -169,6 +175,39 @@ try {
             }
         )) > 0,
         'Session cookie is expired'
+    );
+
+    $bearerToken = $sessionSvc->Create((string)$userID);
+    $beforeBearerLogout = $request(
+        'GET', '/api/me', null, $bearerToken
+    );
+
+    AssertTest(
+        $beforeBearerLogout['status'] === 200,
+        'Bearer session authenticates before Log Out'
+    );
+
+    $bearerLogout = $request(
+        'POST', '/api/logout', null, $bearerToken
+    );
+
+    AssertTest(
+        $bearerLogout['status'] === 200,
+        'Bearer session can Log Out'
+    );
+
+    $afterBearerLogout = $request(
+        'GET', '/api/me', null, $bearerToken
+    );
+
+    AssertTest(
+        $afterBearerLogout['status'] === 401,
+        'Revoked Bearer Token cannot authenticate'
+    );
+
+    AssertTest(
+        !HasResponseHeader($bearerLogout['headers'], 'Set-Cookie'),
+        'Bearer Log Out does not set or clear cookies'
     );
 
 

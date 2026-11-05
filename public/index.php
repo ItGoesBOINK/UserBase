@@ -78,6 +78,11 @@ try {
     $sessions = new SessionService($authSessions, $clock, $sessionSettings);
     $login = new LoginService($users, $sessions);
 
+    $credentialResolver = new SessionCredentialResolver($cookie);
+    $authenticator = new SessionAuthenticator($sessions, $credentialResolver);
+    $pipeline = new RequestPipeline($authenticator);
+    $router = new Router($pipeline);
+
 
     // Build Router
     $healthCtrl =
@@ -96,12 +101,7 @@ try {
     new MeController($users);
 
     $logoutCtrl =
-    new LogOutController($sessions);
-
-    $credentialResolver = new SessionCredentialResolver($cookie);
-    $authenticator = new SessionAuthenticator($sessions, $credentialResolver);
-    $pipeline = new RequestPipeline($authenticator);
-    $router = new Router($pipeline);
+    new LogOutController($sessions, $credentialResolver, $cookie);
 
     // Health Check
     $router->Add(

@@ -66,20 +66,7 @@ $Request = function (
     ];
 };
 
-function HasResponseHeader(
-    array $headers,
-    string $headerName
-): bool {
-    return count(array_filter(
-        $headers,
-        static fn (string $header): bool =>
-            stripos($header, $headerName) === 0
-    )) > 0;
-}
 
-function HasCookieHeader(array $headers): bool {
-    return HasResponseHeader($headers, 'Set-Cookie: userbase_session=');
-}
 
 
 $users = new UserRepository($pdo);
