@@ -22,6 +22,10 @@ $Request = function (
     array $headers = []
 ): array {
 
+    $fullPath = 'http://userbase/' . ltrim($path, '/');
+
+    //echo "Request: [{$method}] => [{$fullPath}]";
+
     $context = stream_context_create([
         'http' => [
             'method' => $method,
@@ -32,7 +36,7 @@ $Request = function (
     ]);
 
     $body = file_get_contents(
-        'http://userbase/' . ltrim($path, '/'),
+        $fullPath,
         false,
         $context
     );
@@ -52,6 +56,7 @@ $Request = function (
 
     $status = (int) ($matches[1] ?? 0);
 
+    //var_dump($body);
     $bodyJson = json_decode(
         $body,
         true,

@@ -8,6 +8,7 @@ use Throwable;
 use DomainException;
 use UserBase\Exception\EmailDeliveryException;
 use UserBase\Exception\AccountConflictException;
+use UserBase\Exception\CredentialConflictException;
 use UserBase\Exception\ValidationException;
 
 final class ExceptionHandler
@@ -27,6 +28,14 @@ final class ExceptionHandler
                 'account_conflict',
                 $err->getMessage(),
                 409
+            );
+        }
+
+        if ($err instanceof CredentialConflictException) {
+            JsonResponse::Error(
+                'credential_conflict',
+                $err->getMessage(),
+                400
             );
         }
 

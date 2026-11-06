@@ -104,8 +104,22 @@ try {
         'Active session authenticates before log-out'
     );
 
+    AssertTest(
+        ($beforeLogout['body']['data']['id'] ?? null) === (string)$userID,
+        'Cookie Authentication returns the correct user ID'
+    );
+
+    AssertTest(
+        ($beforeLogout['body']['data']['username'] ?? null) === $username,
+        'Cookie Authentication returns the correct user name'
+    );
+
+    AssertTest(
+        ($beforeLogout['body']['data']['email'] ?? null) === $email,
+        'Cookie Authentication returns the correct E-Mail'
+    );
+
     $logout = $request('POST', '/api/logout', $token);
-    // var_dump($logout);
 
     AssertTest(
         $logout['status'] === 200,
@@ -177,6 +191,7 @@ try {
         'Session cookie is expired'
     );
 
+    // 7. Bearer Token returns the correct User data
     $bearerToken = $sessionSvc->Create((string)$userID);
     $beforeBearerLogout = $request(
         'GET', '/api/me', null, $bearerToken
@@ -187,6 +202,22 @@ try {
         'Bearer session authenticates before Log Out'
     );
 
+    AssertTest(
+        ($beforeBearerLogout['body']['data']['id'] ?? null) === (string)$userID,
+        'Bearer Authentication returns the correct user ID'
+    );
+
+    AssertTest(
+        ($beforeBearerLogout['body']['data']['username'] ?? null) === $username,
+        'Bearer Authentication returns the correct user name'
+    );
+
+    AssertTest(
+        ($beforeBearerLogout['body']['data']['email'] ?? null) === $email,
+        'Bearer Authentication returns the correct E-Mail'
+    );
+
+    // 8. Bearer Token transport can Log Out
     $bearerLogout = $request(
         'POST', '/api/logout', null, $bearerToken
     );
@@ -196,6 +227,7 @@ try {
         'Bearer session can Log Out'
     );
 
+    // 9. Bearer Token cannot be reused after revocation
     $afterBearerLogout = $request(
         'GET', '/api/me', null, $bearerToken
     );
@@ -205,16 +237,26 @@ try {
         'Revoked Bearer Token cannot authenticate'
     );
 
+    // 10. Bearer Token Transport does not modify cookies
     AssertTest(
         !HasResponseHeader($bearerLogout['headers'], 'Set-Cookie'),
         'Bearer Log Out does not set or clear cookies'
     );
 
-    /**
-     * TODO: testing a request that supplies both credentials,
-     * and verifying the deliberate HTTP 400 response.
-     */
+    // 11. Supplying both cookies and bearer token credentials is rejected
+    $cookieTokenBoth = $sessionSvc->Create((string)$userID);
+    $bearerTokenBoth = $sessionSvc->Create((string)$userID);
 
+    $bothCredentials = $request(
+        'GET', '/api/me',
+        $cookieTokenBoth,
+        $bearerTokenBoth
+    );
+
+    AssertTest(
+        $bothCredentials['status'] === 400,
+        'Supplying both cookie and bearer credentials returns HTTP 400 (rejected)'
+    );
 
     HandleComplete(__FILE__);
 

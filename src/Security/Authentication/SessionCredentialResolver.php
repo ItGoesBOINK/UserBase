@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace UserBase\Security\Authentication;
 
 use InvalidArgumentException;
+use UserBase\Exception\CredentialConflictException;
+use UserBase\Http\ExceptionHandler;
 use UserBase\Http\RequestContext;
 use UserBase\Security\Cookies\SessionCookie;
 
@@ -20,9 +22,9 @@ final class SessionCredentialResolver
         $bearerToken = $this->GetBearerToken($reqContext);
 
         if ($cookieToken !== null && $bearerToken !== null) {
-            throw new InvalidArgumentException(
+            ExceptionHandler::Handle( new CredentialConflictException(
                 'Multiple session credentials were supplied'
-            );
+            ));
         }
 
         if ($bearerToken !== null) {

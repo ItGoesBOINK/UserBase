@@ -5,14 +5,6 @@ declare(strict_types=1);
 namespace UserBase\Core;
 
 use Throwable;
-use UserBase\Http\ExceptionHandler;
-
-try {
-    require_once dirname(__DIR__) . '/src/bootstrap.php';
-} catch (Throwable $e) {
-    ExceptionHandler::Handle($e);
-}
-
 use PDO;
 
 use UserBase\Database\DatabaseProxy;
@@ -29,29 +21,35 @@ use UserBase\Security\Authentication\IAuthenticator;
 use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialResolver;
 
+use UserBase\Http\ExceptionHandler;
 use UserBase\Http\CorsHandler;
 use UserBase\Http\OriginValidator;
-use UserBase\Http\SessionCookie;
 use UserBase\Http\Router;
+use UserBase\Http\Route;
 use UserBase\Http\RequestPipeline;
 use UserBase\Http\IRequestHandler;
 use UserBase\Http\RequestContext;
 use UserBase\Http\AuthenticationRequirement;
+use UserBase\Http\RouteModule;
+use UserBase\Http\RoutePolicy;
+use UserBase\Http\RouteDescriptor;
 
 
-public class UserBase
+class UserBase
 {
-    public readonly bool $isInitialized = false;
+    protected bool $isInitialized = false;
 
     // Core Functionality
-    protected readonly IClock $clock;
+    public IClock $clock;
+    public readonly PDO $connection;
+
     protected readonly DatabaseProxy $database;
-    protected readonly PDO $connection;
 
     // Session Dependencies
-    protected readonly SessionCookie $cookie;
-    protected readonly AuthSessionRepository $sessionRepo;
-    protected readonly SessionService $sessionService;
+    public readonly SessionService $sessionService;
+    public readonly SessionCookie $cookie;
+    public readonly AuthSessionRepository $sessionRepo;
+
     protected readonly SessionCredentialResolver $credentialResolver;
     protected readonly IAuthenticator $sessionAuthenticator;
 
@@ -61,18 +59,18 @@ public class UserBase
 
     /** Initialization ------------------------------------ */
 
+    public function IsInitialized(): bool { return $this->isInitialized; }
+
     public function __construct(
         public readonly Configuration $config,
         public readonly SessionSettings $sessionSettings,
-        protected readonly $addDefaultRoutes = false,
-        bool $initImmediately = false
+        protected readonly bool $addDefaultRoutes = false,
+        bool $autoInit = false
     ) {
-        $this->ValidateConfiguration();
-        if ($initImmediately) $this->Init();
+        if ($autoInit) $this->Init();
     }
 
     public function Init(): bool {
-
         try {
 
             $this->ValidateConfiguration();
@@ -85,12 +83,12 @@ public class UserBase
 
             $this->isInitialized = true;
 
+            if ($this->addDefaultRoutes) $this->AddDefaultRoutes();
+
         } catch (Throwable $e) {
             $this->isInitialized = false;
             ExceptionHandler::Handle($e);
         }
-
-        if ($this->addDefaultRoutes) $this->AddDefaultRoutes();
 
         return $this->isInitialized;
     }
@@ -115,13 +113,13 @@ public class UserBase
 
     protected function ApplySecurityPolicies()
     {
-        CorsHandler::Handle($config);
-        OriginValidator::Validate($config);
+        CorsHandler::Handle($this->config);
+        OriginValidator::Validate($this->config);
     }
 
     protected function InitClock(): void
     {
-        if ($this->clock === null)
+        if (!isset($this->clock) || $this->clock === null)
         {
             $this->clock = new SystemClock();
         }
@@ -129,12 +127,12 @@ public class UserBase
 
     protected function InitDatabaseConnection(): void
     {
-        if ($this->database === null)
+        if (!isset($this->database) || $this->database === null)
         {
-            $this->database = new DataBaseProxy($this->config);
+            $this->database = new DatabaseProxy($this->config);
         }
 
-        if ($this->database !== null && $this->connection === null)
+        if ($this->database !== null && (!isset($this->connection) || $this->connection === null))
         {
             $this->connection = $this->database->GetConnection();
         }
@@ -156,7 +154,7 @@ public class UserBase
         );
 
         $this->credentialResolver =
-        new SessionCredentialResolver($cookie);
+        new SessionCredentialResolver($this->cookie);
 
         $this->sessionAuthenticator =
         new SessionAuthenticator($this->sessionService, $this->credentialResolver);
@@ -180,9 +178,9 @@ public class UserBase
         $this->CheckCanRoute();
         $this->CheckValidMethod($method);
 
-        $router->Add(
+        $this->router->Add(
             $method, $routePath,
-            new Route($handler, $authReq)
+            new Route($handler, new RoutePolicy($authReq))
         );
     }
 
@@ -202,6 +200,35 @@ public class UserBase
         $this->AddRoute('POST', $routePath, $authReq, $handler);
     }
 
+    public function AddDefaultRoutes(): void
+    {
+        $defaultModule = new DefaultRouteModule(
+            $this->config,
+            $this->clock,
+            $this->connection,
+            $this->sessionService,
+            $this->cookie,
+            $this->credentialResolver
+        );
+
+        $this->RegisterRouteModule($defaultModule);
+    }
+
+    public function RegisterRouteModule(RouteModule $module): void
+    {
+        if ($module === null) ExceptionHandler::Handle(
+            new RuntimeException('Cannot register a null Route Module!'));
+
+        foreach ($module->descriptors as $d) {
+            $this->AddRoute(
+                $d->method,
+                $d->path,
+                $d->authReq,
+                $d->handler
+            );
+        }
+    }
+
     public function Dispatch(): void
     {
         $this->CheckCanRoute();
@@ -217,7 +244,7 @@ public class UserBase
             $headers, $cookies
         );
 
-        $router->Dispatch($context);
+        $this->router->Dispatch($reqContext);
     }
 
 

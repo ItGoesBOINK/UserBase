@@ -24,6 +24,30 @@ function AssertTest(bool $condition, string $message): void
     echo Out::Pass($message);
 }
 
+function AssertTypeError(callable $operation, string $message): void
+{
+    try {
+        $operation();
+    } catch (TypeError $e) {
+        Out::Pass($message);
+        return;
+    }
+
+    throw new RuntimeException(Out::GetFail($message));
+}
+
+function AssertInvalidArgumentException(callable $operation, string $message): void
+{
+    try {
+        $operation();
+    } catch (InvalidArgumentException $e) {
+        Out::Pass($message);
+        return;
+    }
+
+    throw new InvalidArgumentException(Out::GetFail($message));
+}
+
 function AssertDomainException(
     callable $operation,
     string $message

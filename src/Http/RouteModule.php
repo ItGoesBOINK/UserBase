@@ -4,23 +4,17 @@ declare(strict_types=1);
 
 namespace UserBase\Http;
 
-public class RouteModule
+class RouteModule
 {
-    /** @var array<array<string, string, AuthenticationRequirement, IRequestHandler>> */
-    protected readonly array $descriptors;
+    /** @var array<RouteDescriptor> */
+    public readonly ?array $descriptors;
 
     public function __construct(
-        /** @var array<array<string, string, AuthenticationRequirement, IRequestHandler>> */
-        array $routeDescriptors
+        /** @var array<RouteDescriptor> */
+        ?array $descriptors = null
     ) {
-        $this->descriptors = $routeDescriptors;
+        $this->descriptors = $descriptors;
     }
-
-    public function GetCount(): int {
-        return count($this->descriptors);
-    }
-
-    public function GetRoute():
 }
 
 ?>

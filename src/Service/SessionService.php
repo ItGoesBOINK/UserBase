@@ -13,7 +13,7 @@ use UserBase\Config\SessionSettings;
 final class SessionService
 {
     public function __construct(
-        private readonly AuthSessionRepository $sessions,
+        public readonly AuthSessionRepository $authSessionRepo,
         private readonly IClock $clock,
         private readonly SessionSettings $sessionSettings
     ) {}
@@ -42,7 +42,7 @@ final class SessionService
             '+' . $this->sessionSettings->lifetimeSeconds . ' seconds'
         );
 
-        $this->sessions->Create(
+        $this->authSessionRepo->Create(
             $userID,
             $tokenHash,
             $expiresAt
@@ -58,7 +58,7 @@ final class SessionService
     {
         if (!InputValidator::IsValidSessionToken($rawToken)) return;
 
-        $this->sessions->Revoke(
+        $this->authSessionRepo->Revoke(
             TokenUtility::TokenToHash($rawToken),
             $this->clock->Now()
         );
@@ -73,7 +73,7 @@ final class SessionService
             return null;
         }
 
-        return $this->sessions->FindActiveByTokenHash(
+        return $this->authSessionRepo->FindActiveByTokenHash(
             TokenUtility::TokenToHash($rawToken),
             $this->clock->Now()
         );
