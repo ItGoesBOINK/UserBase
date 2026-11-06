@@ -22,9 +22,9 @@ final class SessionCredentialResolver
         $bearerToken = $this->GetBearerToken($reqContext);
 
         if ($cookieToken !== null && $bearerToken !== null) {
-            ExceptionHandler::Handle( new CredentialConflictException(
+            throw new CredentialConflictException(
                 'Multiple session credentials were supplied'
-            ));
+            );
         }
 
         if ($bearerToken !== null) {

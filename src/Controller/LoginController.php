@@ -82,6 +82,9 @@ final class LoginController extends ControllerBase
 
         if ($transport === 'cookie') {
             if (!$this->sessionCookie->Set($token)) {
+
+                $this->sessionService->Revoke($token);
+
                 $this->Error(
                     'session_cookie_error',
                     'Unable to establish the session cookie',

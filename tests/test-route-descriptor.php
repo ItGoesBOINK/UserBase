@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/test_base.php';
 
-use Throwable;
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\AuthenticationRequirement;
 use UserBase\Http\IRequestHandler;

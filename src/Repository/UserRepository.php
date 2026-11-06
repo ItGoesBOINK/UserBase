@@ -118,6 +118,23 @@ final class UserRepository
             'id' => $userID
         ]);
     }
+
+    /**
+     * Update a user's password hash
+     */
+    public function UpdatePasswordHash(string $userID, string $passwordHash): void
+    {
+        $sql = $this->connection->prepare(
+            'UPDATE users
+             SET password_hash = :password_hash
+             WHERE id = :id'
+        );
+
+        $sql->execute([
+            'password_hash' => $passwordHash,
+            'id' => $userID
+        ]);
+    }
 }
 
 ?>

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// use Throwable;
 use UserBase\Config\SessionSettings;
 use UserBase\Http\RequestContext;
 use UserBase\Security\Authentication\SessionCredentialResolver;
@@ -86,7 +87,8 @@ $throws = false;
 
 try {
     $resolver->Resolve($request);
-} catch (InvalidArgumentException $err) {
+} catch (Throwable $err) {
+    // var_dump($err);
     $throws = true;
 }
 

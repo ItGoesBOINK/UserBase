@@ -17,6 +17,9 @@ sort($testFiles);
 
 $passed = 0;
 $failed = 0;
+$failures = [];
+$index = 0;
+$count = count($testFiles);
 
 //echo "================ BEGIN TEST SUITE ================\n";
 Out::ColorLine(Out::MAGENTA, "================ BEGIN TEST SUITE ================");
@@ -46,14 +49,28 @@ foreach ($testFiles as $testFile) {
     } else {
         //echo "FAIL: {$testName} (exit code: {$exitCode})\n\n";
         Out::Label(Out::RED, "[MODULE FAILED]:", "{$testName} (exit code: {$exitCode})\n");
+        $n = $index+1;
+        $failures[] = "({$n}/{$count})\t: [{$testName}]\t<{$exitCode}>";
         $failed++;
     }
+
+    $index++;
 }
 
 $total = $passed + $failed;
 $color = Out::WHITE;
 
 Out::ColorLine(Out::CYAN, "================ TEST SUITE SUMMARY ================");
+
+
+if (count($failures) > 0) {
+    Out::ColorLine(Out::RED, "\n--- FAILURES ---");
+    foreach ($failures as $fail)
+    {
+        Out::ColorLine(Out::RED, $fail);
+    }
+    Out::ColorLine(Out::RED, "----------------\n");
+}
 
 if ($passed === $total) $color = Out::GREEN;
 else if ($passed === 0) $color = Out::RED;
@@ -68,7 +85,8 @@ if ($passed === $total) $color = Out::GREEN;
 else if ($passed === 0) $color = Out::RED;
 else $color = Out::YELLOW;
 echo "____________\n";
-Out::Label($color, '[TOTAL]: ', (string) $total);
+$pct = (int)(($passed / $count) * 100);
+Out::Label($color, '[TOTAL]: ', "{$total} ({$pct}%%)");
 
 Out::ColorLine(Out::BLUE, "================ END TEST SUITE ================");
 

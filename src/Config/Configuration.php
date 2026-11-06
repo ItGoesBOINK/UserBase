@@ -66,7 +66,7 @@ final class Configuration
     { return isset($_SERVER[self::HTTPS]); }
 
     public function HttpsIsNotOff(): bool
-    { return $this->HTTP() !== self::off; }
+    { return $this->HTTPS() !== self::off; }
 
     public function IsSecure(): bool
     {

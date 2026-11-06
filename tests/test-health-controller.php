@@ -16,7 +16,7 @@ $streamContext = stream_context_create([
     ]
 ]);
 
-$body = file_get_contents('http://userbase/api/health', false, $context);
+$body = file_get_contents('http://userbase/api/health', false, $streamContext);
 $headers = $http_response_header ?? [];
 
 AssertTest(

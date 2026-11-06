@@ -55,16 +55,10 @@ final class SessionCookie
         return [
             'expires' => $expires,
             'path' => $this->settings->cookiePath,
-            'secure' => $this->isSecure,
-            'httponly' => $this->settings->httpOnly,
+            'secure' => true, //$this->isSecure,
+            'httponly' => true, // $this->settings->httpOnly,
             'samesite' => $this->settings->sameSitePolicy
         ];
-    }
-
-    private function IsSecure(): bool
-    {
-        return isset($_SERVER['HTTPS']) &&
-               $_SERVER['HTTPS'] !== 'off';
     }
 }
 
