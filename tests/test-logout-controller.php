@@ -95,7 +95,7 @@ try {
     );
 
     // 1.  Log-out revokes an active session
-    $token = $sessionSvc->Create($userID);
+    $token = $sessionSvc->Create($userID)->sessionToken;
     $beforeLogout = $request('GET', '/api/me', $token);
     //var_dump($beforeLogout);
 
@@ -192,7 +192,7 @@ try {
     );
 
     // 7. Bearer Token returns the correct User data
-    $bearerToken = $sessionSvc->Create((string)$userID);
+    $bearerToken = $sessionSvc->Create((string)$userID)->sessionToken;
     $beforeBearerLogout = $request(
         'GET', '/api/me', null, $bearerToken
     );
@@ -244,8 +244,8 @@ try {
     );
 
     // 11. Supplying both cookies and bearer token credentials is rejected
-    $cookieTokenBoth = $sessionSvc->Create((string)$userID);
-    $bearerTokenBoth = $sessionSvc->Create((string)$userID);
+    $cookieTokenBoth = $sessionSvc->Create((string)$userID)->sessionToken;
+    $bearerTokenBoth = $sessionSvc->Create((string)$userID)->sessionToken;
 
     $bothCredentials = $request(
         'GET', '/api/me',
@@ -301,7 +301,7 @@ try {
 
 
     // 15. Expired Session is rejected
-    $expiredToken = $sessionSvc->Create((string)$userID);
+    $expiredToken = $sessionSvc->Create((string)$userID)->sessionToken;
 
     // Match the SHA-256 binary hash stored by UserBase
     $tokenHash = TokenUtility::TokenToHash($expiredToken, true);
@@ -309,12 +309,12 @@ try {
     $sql = $pdo->prepare(
         'UPDATE auth_sessions
          SET expires_at = :expires_at
-         WHERE token_hash = :token_hash'
+         WHERE session_token_hash = :session_token_hash'
     );
 
     $sql->execute([
         'expires_at' => '2000-01-01 00:00:00',
-        'token_hash' => $tokenHash
+        'session_token_hash' => $tokenHash
     ]);
 
     AssertTest(

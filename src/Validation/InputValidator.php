@@ -13,11 +13,14 @@ final class InputValidator
     private const int MIN__PASSWORD = 12;
     private const int MAX__PASSWORD = 1024;
 
+    public static function IsValidHexadecimalToken(string $token): bool
+        { return preg_match(self::PATTERN__HEX_TOKEN, $token) === 1; }
+
     public static function IsValidVerificationToken(string $token): bool
-    { return preg_match(self::PATTERN__HEX_TOKEN, $token) === 1; }
+    { return self::IsValidHexadecimalToken($token); }
 
     public static function IsValidSessionToken(string $token): bool
-    { return preg_match(self::PATTERN__HEX_TOKEN, $token) === 1; }
+    { return self::IsValidHexadecimalToken($token); }
 
     public static function IsValidUserName(string $username): bool
     { return preg_match(self::PATTERN__USER_NAME, $username) === 1; }

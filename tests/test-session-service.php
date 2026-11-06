@@ -33,7 +33,7 @@ try {
     $service = new SessionService($sessions, $clock, $sessionSettings);
 
     // 2. Create a session
-    $rawToken = $service->Create($userID);
+    $rawToken = $service->Create($userID)->sessionToken;
 
     AssertTest(
         IsValidToken($rawToken),
@@ -44,7 +44,7 @@ try {
     $tokenHash = hash('sha256', $rawToken);
 
     $sql = $pdo->prepare(
-        'SELECT token_hash FROM auth_sessions WHERE user_id = :user_id'
+        'SELECT session_token_hash FROM auth_sessions WHERE user_id = :user_id'
     );
 
     $sql->execute(['user_id' => $userID]);
@@ -90,7 +90,7 @@ try {
     );
 
     // 7. Create another session and advance beyond expiration
-    $expiringToken = $service->Create($userID);
+    $expiringToken = $service->Create($userID)->sessionToken;
 
     AssertTest(
         $service->Validate($expiringToken) !== null,

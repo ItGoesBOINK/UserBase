@@ -15,6 +15,7 @@ use UserBase\Repository\UserRepository;
 use UserBase\Service\LoginService;
 use UserBase\Service\SessionService;
 use Userbase\Tests\TestClock;
+use UserBase\Validation\InputValidator;
 
 $users = new UserRepository($pdo);
 $sessionRepository = new AuthSessionRepository($pdo);
@@ -66,14 +67,16 @@ try {
     $users->MarkEmailVerified($userID, $clock->Now());
 
     // 4. Successful login returns a valid session token
-    $rawToken = $login->Login($username, $password);
+    $grant = $login->Login($username, $password);
+    $sessionToken = $grant->sessionToken;
+    $syncToken = $grant->syncToken;
 
     AssertTest(
-        IsValidToken($rawToken),
+        IsValidToken($sessionToken),
         'Successful login returns a valid session token'
     );
 
-    $session = $sessions->Validate($rawToken);
+    $session = $sessions->Validate($sessionToken);
 
     AssertTest(
         $session !== null &&
@@ -84,6 +87,21 @@ try {
     AssertTest(
         $countSessions() === 1,
         'Successful login creates exactly one session'
+    );
+
+    AssertTest(
+        InputValidator::IsValidSessionToken($sessionToken),
+        'Session Token should be valid'
+    );
+
+    AssertTest(
+        InputValidator::IsValidSessionToken($syncToken),
+        'CSRF Sync-Token should be valid'
+    );
+
+    AssertTest(
+        $sessionToken !== $syncToken,
+        'Session Token and CSRF Sync-Token should be different'
     );
 
 
@@ -115,7 +133,7 @@ try {
     $caseInsensitiveToken = $login->Login(
         strtoupper($username),
         $password
-    );
+    )->sessionToken;
 
     AssertTest(
         IsValidToken($caseInsensitiveToken),

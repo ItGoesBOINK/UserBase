@@ -24,7 +24,7 @@ final class TokenUtility
     }
 
     public static function IsValidHash(string $hash): bool
-    { return InputValidator::IsValidSessionToken($hash); }
+    { return InputValidator::IsValidHexadecimalToken($hash); }
 }
 
 ?>

@@ -60,7 +60,7 @@ final class AuthSessionRepository
 
         $sql->execute([
             'revoked_at' => TimeUtility::FormatTimestamp($revokedAt),
-            'token_hash' => TokenUtility::HashToBinary($sessionTokenHash)
+            'session_token_hash' => TokenUtility::HashToBinary($sessionTokenHash)
         ]);
 
         return $sql->rowCount() === 1;

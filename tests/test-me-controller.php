@@ -11,6 +11,7 @@ use UserBase\Service\SessionService;
 use UserBase\Tests\TestClock;
 use UserBase\Time\SystemClock;
 use UserBase\Security\TokenUtility;
+use UserBase\Security\Authentication\SessionGrant;
 use UserBase\Http\APIErrors;
 
 /*
@@ -41,7 +42,7 @@ try {
         $passwordHash
     );
 
-    $createSession = function () use ($sessionSvc, $userID): string {
+    $createSession = function () use ($sessionSvc, $userID): SessionGrant {
         return $sessionSvc->Create($userID);
     };
 
@@ -114,7 +115,8 @@ try {
 
 
     // 4. Revoked Session
-    $revokedToken = $createSession();
+    $grant = $createSession();
+    $revokedToken = $grant->sessionToken;
     $tokenHash = TokenUtility::TokenToHash($revokedToken);
     $revoked = $authSessionRepo->Revoke(
         $tokenHash, $clock->Now()
@@ -138,18 +140,18 @@ try {
 
 
     // 5. Expired Session
-    $expiredToken = $createSession();
+    $expiredToken = $createSession()->sessionToken;
 
     $sql = $pdo->prepare(
         'UPDATE auth_sessions
          SET expires_at = :expires_at
-         WHERE token_hash = :token_hash'
+         WHERE session_token_hash = :session_token_hash'
     );
 
     $sql->execute([
         'expires_at' => (new DateTimeImmutable('-1 hour', new DateTimeZone('UTC')))
                         ->format('Y-m-d H:i:s.u'),
-        'token_hash' => TokenUtility::HashToBinary(
+        'session_token_hash' => TokenUtility::HashToBinary(
             TokenUtility::TokenToHash($expiredToken))
     ]);
 
@@ -164,7 +166,7 @@ try {
 
 
     // 6. Valid Session
-    $validToken = $createSession();
+    $validToken = $createSession()->sessionToken;
     $response = $requestMe($validToken);
 
     // var_dump($response);
