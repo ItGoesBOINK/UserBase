@@ -258,6 +258,78 @@ try {
         'Supplying both cookie and bearer credentials returns HTTP 400 (rejected)'
     );
 
+    // 12. Missing credentials cannot access a protected route
+    $missingCredentials = $request('GET', '/api/me');
+
+    AssertTest(
+        $missingCredentials['status'] === 401,
+        'Missing credentials are rejected by protected routes'
+    );
+
+    // 13. Unsupported authorization scheme cannot authenticate
+    $unsupportedScheme = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'ignore_errors' => true,
+            'header' => 'Authorization: Basic randomGarbage'
+        ]
+    ]);
+
+    $unsupportedBody = file_get_contents(
+        'http://userbase/api/me',
+        false,
+        $unsupportedScheme
+    );
+
+    $unsupportedHeaders = $http_response_header ?? [];
+
+    preg_match('/\b(\d{3})\b/', $unsupportedHeaders[0] ?? '', $matches);
+    $unsupportedStatus = (int)($matches[1] ?? 0);
+
+    AssertTest(
+        $unsupportedStatus === 401,
+        'Unsupported authorization scheme is rejected'
+    );
+
+    // 14. Invalid / Unknown Session Token cannot authenticate
+    $invalidToken = $request('GET', '/api/me', 'invalid-session-token');
+
+    AssertTest(
+        $invalidToken['status'] === 401,
+        'Unknown / Invalid Token is rejected'
+    );
+
+
+    // 15. Expired Session is rejected
+    $expiredToken = $sessionSvc->Create((string)$userID);
+
+    // Match the SHA-256 binary hash stored by UserBase
+    $tokenHash = TokenUtility::TokenToHash($expiredToken, true);
+
+    $sql = $pdo->prepare(
+        'UPDATE auth_sessions
+         SET expires_at = :expires_at
+         WHERE token_hash = :token_hash'
+    );
+
+    $sql->execute([
+        'expires_at' => '2000-01-01 00:00:00',
+        'token_hash' => $tokenHash
+    ]);
+
+    AssertTest(
+        $sql->rowCount() === 1,
+        'Test session expiration was successfully updated'
+    );
+
+    $expiredSession = $request('GET', '/api/me', $expiredToken);
+
+    AssertTest(
+        $expiredSession['status'] === 401,
+        'Expired session is rejected by protected routes'
+    );
+
+
     HandleComplete(__FILE__);
 
 } finally {
