@@ -92,6 +92,58 @@ final class AuthSessionRepository
 
         return $session === false ? null : $session;
     }
+
+    /**
+     * Replace the sync-token hash for an active session.
+     */
+    public function UpdateSyncTokenHash(
+        string $sessionTokenHash,
+        string $syncTokenHash,
+        DateTimeImmutable $now
+    ): bool {
+        $sql = $this->connection->prepare(
+            'UPDATE auth_sessions
+             SET sync_token_hash = :sync_token_hash
+             WHERE session_token_hash = :session_token_hash
+                AND revoked_at IS NULL
+                AND expires_at > :now'
+        );
+
+        $sql->execute([
+            'sync_token_hash' => TokenUtility::HashToBinary($syncTokenHash),
+            'session_token_hash' => TokenUtility::HashToBinary($sessionTokenHash),
+            'now' => TimeUtility::FormatTimestamp($now)
+        ]);
+
+        return $sql->rowCount() === 1;
+    }
+
+    /**
+     * Verify a sync token against an active session.
+     */
+    public function HasValidSyncToken(
+        string $sessionTokenHash,
+        string $syncTokenHash,
+        DateTimeImmutable $now
+    ): bool {
+        $sql = $this->connection->prepare(
+            'SELECT 1
+             FROM auth_sessions
+             WHERE session_token_hash = :session_token_hash
+                AND sync_token_hash = :sync_token_hash
+                AND revoked_at IS NULL
+                AND expires_at > :now
+             LIMIT 1'
+        );
+
+        $sql->execute([
+            'session_token_hash' => TokenUtility::HashToBinary($sessionTokenHash),
+            'sync_token_hash' => TokenUtility::HashToBinary($syncTokenHash),
+            'now' => TimeUtility::FormatTimestamp($now)
+        ]);
+
+        return $sql->fetchColumn() !== false;
+    }
 }
 
 

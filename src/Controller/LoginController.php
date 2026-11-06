@@ -98,6 +98,10 @@ final class LoginController extends ControllerBase
             ]);
         }
 
+        if ($this->sessionCookie->GetToken($context) !== null) {
+            $this->sessionCookie->Clear();
+        }
+
         $this->Success([
             'message' => 'Login Successful',
             'session_token' => $grant->sessionToken,

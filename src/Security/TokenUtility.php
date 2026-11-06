@@ -23,6 +23,9 @@ final class TokenUtility
         return hex2bin($hash);
     }
 
+    public static function TokenToBinaryHash(string $token): string
+    { return self::HashToBinary(self::TokenToHash($token)); }
+
     public static function IsValidHash(string $hash): bool
     { return InputValidator::IsValidHexadecimalToken($hash); }
 }

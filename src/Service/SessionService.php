@@ -83,4 +83,43 @@ final class SessionService
             $this->clock->Now()
         );
     }
+
+    /**
+     * Rotate a CSRF Synchronization Token
+     */
+    public function RotateSyncToken(string $sessionToken): ?string
+    {
+        if (!InputValidator::IsValidSessionToken($sessionToken)) { return null; }
+
+        $syncToken = TokenUtility::NewToken();
+        $syncTokenHash = TokenUtility::TokenToHash($syncToken);
+        $sessionTokenHash = TokenUtility::TokenToHash($sessionToken);
+
+        $updated = $this->authSessionRepo->UpdateSyncTokenHash(
+            $sessionTokenHash,
+            $syncTokenHash,
+            $this->clock->Now()
+        );
+
+        return $updated ? $syncToken : null;
+    }
+
+    /**
+     * Validate a sync token against an active session.
+     */
+    public function ValidateSyncToken(
+        string $sessionToken,
+        string $syncToken
+    ): bool {
+        if (
+            !InputValidator::IsValidSessionToken($sessionToken) ||
+            !InputValidator::IsValidSessionToken($syncToken)
+        ) { return false; }
+
+        return $this->authSessionRepo->HasValidSyncToken(
+            TokenUtility::TokenToHash($sessionToken),
+            TokenUtility::TokenToHash($syncToken),
+            $this->clock->Now()
+        );
+    }
 }

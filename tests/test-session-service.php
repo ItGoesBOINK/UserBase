@@ -9,6 +9,7 @@ use UserBase\Repository\AuthSessionRepository;
 use UserBase\Repository\UserRepository;
 use UserBase\Service\SessionService;
 use UserBase\Tests\TestClock;
+use UserBase\Security\TokenUtility;
 
 $users = new UserRepository($pdo);
 $sessions = new AuthSessionRepository($pdo);
@@ -33,36 +34,63 @@ try {
     $service = new SessionService($sessions, $clock, $sessionSettings);
 
     // 2. Create a session
-    $rawToken = $service->Create($userID)->sessionToken;
+    $grant = $service->Create($userID);
+    $sessionToken = $grant->sessionToken;
+    $syncToken = $grant->syncToken;
 
     AssertTest(
-        IsValidToken($rawToken),
-        'Create returns a valid 64-character session token'
+        IsValidToken($sessionToken),
+        'Create returns a valid 64-character Session Token'
+    );
+
+    AssertTest(
+        IsValidToken($syncToken),
+        'Create returns a valid 64-character CSRF Synchronizer Token'
+    );
+
+    AssertTest(
+        $sessionToken !== $syncToken,
+        'Session and Sync Tokens are different'
     );
 
     // 3. Confirm the database stores only the token hash
-    $tokenHash = hash('sha256', $rawToken);
+    $sessionTokenHash = hash('sha256', $sessionToken);
 
     $sql = $pdo->prepare(
-        'SELECT session_token_hash FROM auth_sessions WHERE user_id = :user_id'
+        'SELECT session_token_hash, sync_token_hash
+         FROM auth_sessions
+         WHERE user_id = :user_id'
     );
 
     $sql->execute(['user_id' => $userID]);
 
-    $storedHash = $sql->fetchColumn();
+    $storedSession = $sql->fetch(PDO::FETCH_ASSOC);
+    $storedSessionTokenHash = $storedSession['session_token_hash'];
+    $storedSyncTokenHash = $storedSession['sync_token_hash'];
 
     AssertTest(
-        $storedHash === hex2bin($tokenHash),
-        'Database stores the SHA-256 token hash'
+        $storedSessionTokenHash === TokenUtility::TokenToBinaryHash($sessionToken),
+        'Database stores the SHA-256 session token hash'
     );
 
     AssertTest(
-        $storedHash !== $rawToken,
+        $storedSyncTokenHash === TokenUtility::TokenToBinaryHash($syncToken),
+        'Database stores the SHA-256 CSRF sync token hash'
+    );
+
+    AssertTest(
+        $storedSessionTokenHash !== $sessionToken,
         'Database does not store the raw session token'
     );
 
+    AssertTest(
+        $storedSyncTokenHash !== $syncToken,
+        'Database does not store the raw CSRF sync token'
+    );
+
+
     // 4. Validate the new session
-    $session = $service->Validate($rawToken);
+    $session = $service->Validate($sessionToken);
 
     AssertTest(
         $session !== null &&
@@ -81,28 +109,105 @@ try {
         'Malformed token (invalid hash value) is rejected'
     );
 
-    // Revoke the session
-    $service->Revoke($rawToken);
+    // 6. Rotate the CSRF synchronizer token
+    $rotatedSyncToken = $service->RotateSyncToken($sessionToken);
 
     AssertTest(
-        $service->Validate($rawToken) === null,
+        $rotatedSyncToken !== null &&
+        IsValidToken($rotatedSyncToken),
+        'Active session successfully rotates its CSRF synchronizer token'
+    );
+
+    AssertTest(
+        $rotatedSyncToken !== $syncToken,
+        'Rotation generates a different CSRF synchronizer token'
+    );
+
+    // 6.5. confirm the database contains the new hash
+    $sql = $pdo->prepare(
+        'SELECT sync_token_hash
+         FROM auth_sessions
+         WHERE session_token_hash = :session_token_hash'
+    );
+
+    $sql->execute([
+        'session_token_hash' => TokenUtility::TokenToBinaryHash($sessionToken)
+    ]);
+
+    $storedSyncHash = $sql->fetchColumn();
+
+    AssertTest(
+        $storedSyncHash === TokenUtility::TokenToBinaryHash($rotatedSyncToken),
+        'Database stores the newly rotated CSRF synchronizer token hash'
+    );
+
+    AssertTest(
+        $storedSyncHash !== TokenUtility::TokenToBinaryHash($syncToken),
+        'Previous CSRF Sync-Token hash is no longer stored'
+    );
+
+
+    AssertTest(
+        $service->ValidateSyncToken($sessionToken, $rotatedSyncToken),
+        'New CSRF Sync Token validates against its session'
+    );
+
+    AssertTest(
+        !$service->ValidateSyncToken($sessionToken, $syncToken),
+        'Previous CSRF Sync-Token is rejected after rotation'
+    );
+
+    AssertTest(
+        !$service->ValidateSyncToken($sessionToken, 'invalid-token'),
+        'Malformed Token is rejected by Sync Token Validation'
+    );
+
+    // 7. Revoke the session
+    $service->Revoke($sessionToken);
+
+    AssertTest(
+        $service->Validate($sessionToken) === null,
         'Revoked session is rejected'
     );
 
-    // 7. Create another session and advance beyond expiration
-    $expiringToken = $service->Create($userID)->sessionToken;
+    AssertTest(
+        $service->RotateSyncToken($sessionToken) === null,
+        'Revoked Session cannot rotate its CSRF synchronizer token'
+    );
 
     AssertTest(
-        $service->Validate($expiringToken) !== null,
+        !$service->ValidateSyncToken($sessionToken, $rotatedSyncToken),
+        'Revoked session cannot validate its sync token'
+    );
+
+    // 8. Create another session and advance beyond expiration
+    $grant = $service->Create($userID);
+    $expiring_sessionToken = $grant->sessionToken;
+    $expiring_syncToken = $grant->syncToken;
+
+    AssertTest(
+        $service->Validate($expiring_sessionToken) !== null,
         'Second session is initially valid'
     );
 
     $clock->Advance('+25 hours');
 
     AssertTest(
-        $service->Validate($expiringToken) === null,
+        $service->Validate($expiring_sessionToken) === null,
         'Expired session is rejected'
     );
+
+    AssertTest(
+        !$service->ValidateSyncToken($expiring_sessionToken, $expiring_syncToken),
+        'Expired session cannot validate from its own CSRF Sync Token'
+    );
+
+    AssertTest(
+        $service->RotateSyncToken($expiring_sessionToken) === null,
+        'Expired Session cannot rotate its CSRF synchronizer token'
+    );
+
+
 
     HandleComplete(__FILE__);
 

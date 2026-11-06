@@ -55,8 +55,8 @@ final class SessionCookie
         return [
             'expires' => $expires,
             'path' => $this->settings->cookiePath,
-            'secure' => true, //$this->isSecure,
-            'httponly' => true, // $this->settings->httpOnly,
+            'secure' => $this->isSecure,
+            'httponly' => $this->settings->httpOnly,
             'samesite' => $this->settings->sameSitePolicy
         ];
     }
