@@ -64,12 +64,12 @@ Out::ColorLine(Out::CYAN, "================ TEST SUITE SUMMARY ================"
 
 
 if (count($failures) > 0) {
-    Out::ColorLine(Out::RED, "\n--- FAILURES ---");
+    Out::ColorLine(Out::RED, "\n---------------- FAILURES ----------------");
     foreach ($failures as $fail)
     {
         Out::ColorLine(Out::RED, $fail);
     }
-    Out::ColorLine(Out::RED, "----------------\n");
+    Out::ColorLine(Out::RED, "------------------------------------------\n");
 }
 
 if ($passed === $total) $color = Out::GREEN;

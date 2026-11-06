@@ -22,20 +22,22 @@ final class AuthSessionRepository
      */
     public function Create(
         string $userID,
-        string $tokenHash,
+        string $sessionTokenHash,
+        string $syncTokenHash,
         DateTimeImmutable $expiresAt
     ): string {
 
         $sql = $this->connection->prepare(
             'INSERT INTO auth_sessions
-            (user_id, token_hash, expires_at)
+            (user_id, session_token_hash, sync_token_hash, expires_at)
             VALUES
-            (:user_id, :token_hash, :expires_at)'
+            (:user_id, :session_token_hash, :sync_token_hash, :expires_at)'
         );
 
         $sql->execute([
             'user_id' => $userID,
-            'token_hash' => TokenUtility::HashToBinary($tokenHash),
+            'session_token_hash' => TokenUtility::HashToBinary($sessionTokenHash),
+            'sync_token_hash' => TokenUtility::HashToBinary($syncTokenHash),
             'expires_at' => TimeUtility::FormatTimestamp($expiresAt)
         ]);
 
@@ -46,19 +48,19 @@ final class AuthSessionRepository
      * Revoke an authenticated session.
      */
     public function Revoke(
-        string $tokenHash,
+        string $sessionTokenHash,
         DateTimeImmutable $revokedAt
     ): bool {
         $sql = $this->connection->prepare(
             'UPDATE auth_sessions
              SET revoked_at = :revoked_at
-             WHERE token_hash = :token_hash
+             WHERE session_token_hash = :session_token_hash
                 AND revoked_at IS NULL'
         );
 
         $sql->execute([
             'revoked_at' => TimeUtility::FormatTimestamp($revokedAt),
-            'token_hash' => TokenUtility::HashToBinary($tokenHash)
+            'token_hash' => TokenUtility::HashToBinary($sessionTokenHash)
         ]);
 
         return $sql->rowCount() === 1;
@@ -69,20 +71,20 @@ final class AuthSessionRepository
      * Find an active session by its token hash.
      */
     public function FindActiveByTokenHash(
-        string $tokenHash,
+        string $sessionTokenHash,
         DateTimeImmutable $now
     ): ?array {
         $sql = $this->connection->prepare(
             'SELECT id, user_id, expires_at
              FROM auth_sessions
-             WHERE token_hash = :token_hash
+             WHERE session_token_hash = :session_token_hash
                 AND revoked_at IS NULL
                 AND expires_at > :now
              LIMIT 1'
         );
 
         $sql->execute([
-            'token_hash' => TokenUtility::HashToBinary($tokenHash),
+            'session_token_hash' => TokenUtility::HashToBinary($sessionTokenHash),
             'now' => TimeUtility::FormatTimestamp($now)
         ]);
 

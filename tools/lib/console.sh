@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+I_DOT='●'
+I_DBL_RING='◎'
+I_RING_DOT_LG='◉'
+I_RING_DOT_SM='⦿'
+I_OFF='⦾'
+I_ON='⦿'
+I_BOX='☐'
+I_BOX_X='☒'
+I_BOX_CHK='☑︎'
+I_STAR='★'
+I_CHK='✓'
+I_CHK_BOLD='✔︎'
+I_X='✕'
+I_X_BOLD='✖︎'
+I_TRI_FILLED='▶︎'
+I_TRI_EMPTY='▷'
+I_HAPPY='☻'
+I_SAD='☹︎'
+
 # --------------------------------------------------
 # Terminal Colors
 # --------------------------------------------------
@@ -81,15 +100,25 @@ console_label() {
   console_inline "$LABEL_COLOR" "$C_DIM" "[" "$C_RESET" "$LABEL_COLOR" "$LABEL" "$LABEL_COLOR" "$C_DIM" "] " "$C_RESET" "$DESC"
 }
 
+icon_red_x() {
+  printf '%s%s%s ' "$C_RED" "$I_X_BOLD" "$C_RESET"
+}
+
+icon_green_check() {
+  printf '%s%s%s ' "$C_GREEN" "$I_CHK_BOLD" "$C_RESET"
+}
+
 
 # --------------------------------------------------
 # Status Helpers
 # --------------------------------------------------
 
 console_pass() {
+  icon_green_check
   console_label "$C_GREEN" "PASS" "$1"
 }
 console_fail() {
+  icon_red_x
   console_label "$C_RED" "FAIL" "$1"
 }
 console_warn() {

@@ -52,7 +52,10 @@ CREATE TABLE auth_sessions (
     user_id BIGINT UNSIGNED NOT NULL,
 
     -- SHA-256 hash of the random session token
-    token_hash BINARY(32) NOT NULL,
+    session_token_hash BINARY(32) NOT NULL,
+
+    -- SHA-256 hash of the random CSRF token
+    sync_token_hash BINARY(32) NOT NULL,
 
     created_at DATETIME(6) NOT NULL
         DEFAULT CURRENT_TIMESTAMP(6),
@@ -63,7 +66,7 @@ CREATE TABLE auth_sessions (
 
     PRIMARY KEY (id),
 
-    UNIQUE KEY uq_auth_sessions_token_hash (token_hash),
+    UNIQUE KEY uq_auth_sessions_session_token_hash (session_token_hash),
     KEY idx_auth_sessions_user_expiry (user_id, expires_at),
     CONSTRAINT fk_auth_sessions_user
         FOREIGN KEY (user_id)

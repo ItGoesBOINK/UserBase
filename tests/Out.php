@@ -20,6 +20,25 @@ final class Out
     public const CYAN = "\033[0;36m";
     public const WHITE = "\033[0;37m";
 
+    public const DOT = "●";
+    public const DBL_RING = "◎";
+    public const RING_DOT_LG = "◉";
+    public const RING_DOT_SM = "⦿";
+    public const OFF = "⦾";
+    public const ON = "⦿";
+    public const BOX = "☐";
+    public const BOX_X = "☒";
+    public const BOX_CHK = "☑︎";
+    public const STAR = "★";
+    public const CHK = "✓";
+    public const CHK_BOLD = "✔︎";
+    public const X = "✕";
+    public const X_BOLD = "✖︎";
+    public const TRI_FILLED = "▶︎";
+    public const TRI_EMPTY = "▷";
+    public const HAPPY = "☻";
+    public const SAD = "☹︎";
+
     public static function Label(
         string $color,
         string $label,

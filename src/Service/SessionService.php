@@ -8,6 +8,7 @@ use UserBase\Repository\AuthSessionRepository;
 use UserBase\Time\IClock;
 use UserBase\Validation\InputValidator;
 use UserBase\Security\TokenUtility;
+use UserBase\Security\Authentication\SessionGrant;
 use UserBase\Config\SessionSettings;
 
 final class SessionService
@@ -32,10 +33,13 @@ final class SessionService
      * The raw token is returned to the caller so it can be
      * delivered in a secure cookie. Only its hash is stored.
      */
-    public function Create(string $userID): string
+    public function Create(string $userID): SessionGrant
     {
-        $rawToken = TokenUtility::NewToken();
-        $tokenHash = TokenUtility::TokenToHash($rawToken);
+        $sessionToken = TokenUtility::NewToken();
+        $syncToken = TokenUtility::NewToken();
+
+        $sessionTokenHash = TokenUtility::TokenToHash($sessionToken);
+        $syncTokenHash = TokenUtility::TokenToHash($syncToken);
 
         $now = $this->clock->Now();
         $expiresAt = $now->modify(
@@ -44,11 +48,12 @@ final class SessionService
 
         $this->authSessionRepo->Create(
             $userID,
-            $tokenHash,
+            $sessionTokenHash,
+            $syncTokenHash,
             $expiresAt
         );
 
-        return $rawToken;
+        return new SessionGrant($sessionToken, $syncToken);
     }
 
     /**

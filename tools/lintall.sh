@@ -61,9 +61,11 @@ echo "Total:  $((PASSED + FAILED))"
 echo
 
 if (( FAILED > 0 )); then
-  echo "🔴 PHP Syntax check failed."
+  icon_red_x
+  echo "PHP Syntax check failed."
   exit 1
 fi
 
-echo "🟢 All PHP files passed syntax checking."
+icon_green_check
+printf "All PHP files passed syntax checking."
 exit 0

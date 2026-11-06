@@ -75,15 +75,15 @@ final class LoginController extends ControllerBase
             );
         }
 
-        $token = $this->login->Login(
+        $grant = $this->login->Login(
             $body['username'],
             $body['password']
         );
 
         if ($transport === 'cookie') {
-            if (!$this->sessionCookie->Set($token)) {
+            if (!$this->sessionCookie->Set($grant->sessionToken)) {
 
-                $this->sessionService->Revoke($token);
+                $this->sessionService->Revoke($grant->sessionToken);
 
                 $this->Error(
                     'session_cookie_error',
@@ -92,12 +92,15 @@ final class LoginController extends ControllerBase
                 );
             }
 
-            $this->Success(['message' => 'Login Successful']);
+            $this->Success([
+                'message' => 'Login Successful',
+                'sync_token' => $grant->syncToken
+            ]);
         }
 
         $this->Success([
             'message' => 'Login Successful',
-            'session_token' => $token,
+            'session_token' => $grant->sessionToken,
             'token_type' => 'Bearer',
             'expires_in' => $this->sessionService->GetLifetimeSeconds()
         ]);

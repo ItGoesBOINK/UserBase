@@ -22,6 +22,7 @@ services:
       - "3307:3306"
     volumes:
       - userbase-db-data:/var/lib/mysql
+      - ./database/migrations/001_create_account_tables.sql:/docker-entrypoint-initdb.d/001_create_account_tables.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 5s
