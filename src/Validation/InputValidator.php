@@ -16,8 +16,12 @@ final class InputValidator
     public static function IsValidHexadecimalToken(string $token): bool
         { return preg_match(self::PATTERN__HEX_TOKEN, $token) === 1; }
 
+    public static function IsHexToken(string $token): bool
+        { return self::IsValidHexadecimalToken($token); }
+
     public static function IsValidVerificationToken(string $token): bool
     { return self::IsValidHexadecimalToken($token); }
+
 
     public static function IsValidSessionToken(string $token): bool
     { return self::IsValidHexadecimalToken($token); }

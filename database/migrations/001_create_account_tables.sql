@@ -55,7 +55,7 @@ CREATE TABLE auth_sessions (
     session_token_hash BINARY(32) NOT NULL,
 
     -- SHA-256 hash of the random CSRF token
-    sync_token_hash BINARY(32) NOT NULL,
+    -- sync_token_hash BINARY(32) NOT NULL,
 
     created_at DATETIME(6) NOT NULL
         DEFAULT CURRENT_TIMESTAMP(6),

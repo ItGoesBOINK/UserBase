@@ -14,12 +14,13 @@ use UserBase\Http\Route;
 use UserBase\Http\RoutePolicy;
 use UserBase\Tests\MockAuthenticator;
 use UserBase\Tests\TestController;
+use UserBase\Security\Authentication\SessionCredentialType;
 
 // Determine authentication state from command-line argument
 $authenticated = ($argv[1] ?? '') === 'authenticated';
 
 $authentication = $authenticated
-    ? AuthenticationContext::Authenticated('test-user-123')
+    ? AuthenticationContext::Authenticated('test-user-123', SessionCredentialType::Cookie)
     : AuthenticationContext::Anonymous();
 
     $authenticator = new MockAuthenticator($authentication);

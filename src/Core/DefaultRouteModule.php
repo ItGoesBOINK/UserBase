@@ -18,7 +18,7 @@ use UserBase\Http\RouteModule;
 use UserBase\Http\AuthenticationRequirement;
 
 use UserBase\Controller\HealthController;
-use UserBase\Controller\MeController;
+use UserBase\Controller\IDController;
 use UserBase\Controller\LoginController;
 use UserBase\Controller\LogOutController;
 use UserBase\Controller\RegistrationController;
@@ -28,6 +28,7 @@ use UserBase\Service\LoginService;
 use UserBase\Service\SessionService;
 use UserBase\Service\RegistrationService;
 use UserBase\Service\EmailVerificationService;
+use UserBase\Service\CSRFTokenService;
 
 use UserBase\Repository\UserRepository;
 use UserBase\Repository\AuthSessionRepository;
@@ -40,7 +41,7 @@ class DefaultRouteModule extends RouteModule
 {
     // Controllers
     protected readonly HealthController $ctrlHealth;
-    protected readonly MeController $ctrlMe;
+    protected readonly IDController $ctrlID;
     protected readonly LoginController $ctrlLogin;
     protected readonly LogOutController $ctrlLogout;
     protected readonly RegistrationController $ctrlRegistration;
@@ -63,6 +64,7 @@ class DefaultRouteModule extends RouteModule
         IClock $clock,
         PDO $connection,
         SessionService $sessionService,
+        CSRFTokenService $csrfTokenService,
         SessionCookie $cookie,
         SessionCredentialResolver $credentialResolver
     ) {
@@ -71,6 +73,7 @@ class DefaultRouteModule extends RouteModule
             $clock,
             $connection,
             $sessionService,
+            $csrfTokenService,
             $cookie,
             $credentialResolver
         );
@@ -81,21 +84,24 @@ class DefaultRouteModule extends RouteModule
         IClock $clock,
         PDO $connection,
         SessionService $sessionService,
+        CSRFTokenService $csrfTokenService,
         SessionCookie $cookie,
         SessionCredentialResolver $credentialResolver
     ): void {
-        $get = 'GET';
-        $post = 'POST';
 
         $pub = AuthenticationRequirement::Public;
         $req = AuthenticationRequirement::Required;
 
-        $p_health   = '/api/health';
-        $p_me       = '/api/me';
-        $p_login    = '/api/login';
-        $p_logout   = '/api/logout';
-        $p_register = '/api/register';
-        $p_verify   = '/api/email-verifications/confirm';
+        $get = 'GET';
+        $post = 'POST';
+        $api = '/api/';
+
+        $p_health   = $api . 'health';
+        $p_id       = $api . 'id';
+        $p_login    = $api . 'login';
+        $p_logout   = $api . 'logout';
+        $p_register = $api . 'register';
+        $p_verify   = $api . 'verify';
 
         $this->emailSender = new PHPMailerEmailSender($config);
 
@@ -120,20 +126,43 @@ class DefaultRouteModule extends RouteModule
 
         $this->ctrlHealth =
             new HealthController();
-        $this->ctrlMe =
-            new MeController($this->userRepo);
+
+
+
+        $this->ctrlID =
+            new IDController(
+                $this->userRepo,
+                $csrfTokenService,
+                $cookie
+            );
+
         $this->ctrlRegistration =
-            new RegistrationController($this->serviceRegistration);
+            new RegistrationController
+                ($this->serviceRegistration);
+
         $this->ctrlLogin =
-            new LoginController($this->serviceLogin, $cookie, $sessionService);
+            new LoginController(
+                $this->serviceLogin,
+                $cookie,
+                $sessionService,
+                $csrfTokenService
+            );
+
         $this->ctrlLogout =
-            new LogOutController($sessionService, $credentialResolver, $cookie);
+            new LogOutController
+            (
+                $sessionService,
+                $credentialResolver,
+                $cookie
+            );
+
         $this->ctrlVerification =
-            new EmailVerificationController($this->serviceEmailVerification);
+            new EmailVerificationController
+                ($this->serviceEmailVerification);
 
         $this->descriptors = [
             new RouteDescriptor($get,  $p_health,   $pub, $this->ctrlHealth),
-            new RouteDescriptor($get,  $p_me,       $req, $this->ctrlMe),
+            new RouteDescriptor($get,  $p_id,       $req, $this->ctrlID),
             new RouteDescriptor($post, $p_login,    $pub, $this->ctrlLogin),
             new RouteDescriptor($post, $p_logout,   $pub, $this->ctrlLogout),
             new RouteDescriptor($post, $p_register, $pub, $this->ctrlRegistration),

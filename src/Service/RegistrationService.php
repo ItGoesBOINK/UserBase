@@ -78,7 +78,9 @@ final class RegistrationService
 
         $token = $this->emailVerification->IssueToken($userID);
 
-        $verificationURL = rtrim($this->config->verificationUrlBase, '/') . '?token=' . rawurlencode($token);
+        $verificationURL = $this->config->GetEmailVerificationPageURL() .
+                           '?token=' .
+                           rawurlencode($token);
 
         $this->emailSender->SendVerificationEmail($email, $username, $verificationURL);
 

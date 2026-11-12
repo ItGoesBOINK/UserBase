@@ -46,8 +46,8 @@ try {
         return $sessionSvc->Create($userID);
     };
 
-    // Execute MeController in a separate process
-    $requestMe = function (?string $token): array {
+    // Execute IDController in a separate process
+    $Request = function (?string $token): array {
 
         $context = stream_context_create([
             'http' => [
@@ -60,7 +60,7 @@ try {
         ]);
 
         $body = file_get_contents(
-            'http://userbase/api/me',
+            'http://userbase/api/id',
             false,
             $context
         );
@@ -71,6 +71,7 @@ try {
 
         $status = (int) ($matches[1] ?? 0);
 
+        //var_dump($body);
         $bodyJson = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
 
         return [
@@ -81,36 +82,36 @@ try {
 
 
     // 1. Missing Cookie
-    $response = $requestMe(null);
+    $response = $Request(null);
 
     // var_dump($response);
 
     AssertTest(
         $response['status'] === 401 &&
         $response['body']['error']['code'] === APIErrors::CODE__AUTH_REQUIRED,
-        '(Me) rejects a request without a session cookie'
+        '(ID) rejects a request without a session cookie'
     );
 
 
     // 2. Malformed Token
-    $response = $requestMe('invalid-token');
+    $response = $Request('invalid-token');
 
     // var_dump($response);
 
     AssertTest(
         $response['status'] === 401,
-        '(Me) rejects a malformed session token'
+        '(ID) rejects a malformed session token'
     );
 
 
     // 3. Valid, yet non-existent Token
-    $response = $requestMe(str_repeat('a', 64));
+    $response = $Request(str_repeat('a', 64));
 
     // var_dump($response);
 
     AssertTest(
         $response['status'] === 401,
-        '(Me) rejects a nonexistent session token'
+        '(ID) rejects a nonexistent session token'
     );
 
 
@@ -129,13 +130,13 @@ try {
 
     // var_dump($activeSession);
 
-    $response = $requestMe($revokedToken);
+    $response = $Request($revokedToken);
 
     // var_dump($response);
 
     AssertTest(
         $response['status'] === 401,
-        '(Me) rejects a revoked token'
+        '(ID) rejects a revoked token'
     );
 
 
@@ -155,25 +156,25 @@ try {
             TokenUtility::TokenToHash($expiredToken))
     ]);
 
-    $response = $requestMe($expiredToken);
+    $response = $Request($expiredToken);
 
     // var_dump($response);
 
     AssertTest(
         $response['status'] === 401,
-        '(Me) rejects an expired token'
+        '(ID) rejects an expired token'
     );
 
 
     // 6. Valid Session
     $validToken = $createSession()->sessionToken;
-    $response = $requestMe($validToken);
+    $response = $Request($validToken);
 
-    // var_dump($response);
+    //var_dump($response);
 
     AssertTest(
         $response['status'] === 200,
-        '(Me) accepts a valid session'
+        '(ID) accepts a valid session'
     );
 
 

@@ -7,6 +7,7 @@ namespace UserBase\Controller;
 use JsonException;
 use UserBase\Service\LoginService;
 use UserBase\Service\SessionService;
+use UserBase\Service\CSRFTokenService;
 use UserBase\Http\RequestContext;
 use UserBase\Security\Cookies\SessionCookie;
 
@@ -16,7 +17,8 @@ final class LoginController extends ControllerBase
     public function __construct(
         private readonly LoginService $login,
         private readonly SessionCookie $sessionCookie,
-        private readonly SessionService $sessionService
+        private readonly SessionService $sessionService,
+        private readonly CSRFTokenService $csrfTokenService
     ) {}
 
     #[\Override]
@@ -92,9 +94,11 @@ final class LoginController extends ControllerBase
                 );
             }
 
+            $csrfToken = $this->csrfTokenService->Generate($grant->sessionToken);
+
             $this->Success([
                 'message' => 'Login Successful',
-                'sync_token' => $grant->syncToken
+                'csrf_token' => $csrfToken
             ]);
         }
 

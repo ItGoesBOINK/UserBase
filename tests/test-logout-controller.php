@@ -11,15 +11,6 @@ use UserBase\Service\SessionService;
 use UserBase\Time\SystemClock;
 use UserBase\Validation\InputValidator;
 
-
-// Create the repositories and service used to set up the test data
-$clock = new SystemClock();
-$users = new UserRepository($pdo);
-$authSessionRepo = new AuthSessionRepository($pdo);
-$sessionSvc = new SessionService($authSessionRepo, $clock, $sessionSettings);
-
-$userID = null;
-
 /**
  * Send an HTTP request to the running application
  * @return array{status: int, body: array, headers: array}
@@ -81,6 +72,20 @@ $request = function (
 
 try {
 
+    $userID = null;
+
+    $m_get = 'GET';
+    $m_post = 'POST';
+    $p_id = '/api/id';
+    $p_logout = '/api/logout';
+
+    // Create the repositories and service used to set up the test data
+    $clock = new SystemClock();
+    $users = new UserRepository($pdo);
+    $authSessionRepo = new AuthSessionRepository($pdo);
+    $sessionSvc = new SessionService($authSessionRepo, $clock, $sessionSettings);
+
+
     // 0.  Create a unique test user
     $suffix = bin2hex(random_bytes(16));
     $username = 'logout_test_' . $suffix;
@@ -96,7 +101,7 @@ try {
 
     // 1.  Log-out revokes an active session
     $token = $sessionSvc->Create($userID)->sessionToken;
-    $beforeLogout = $request('GET', '/api/me', $token);
+    $beforeLogout = $request($m_get, $p_id, $token);
     //var_dump($beforeLogout);
 
     AssertTest(
@@ -119,7 +124,7 @@ try {
         'Cookie Authentication returns the correct E-Mail'
     );
 
-    $logout = $request('POST', '/api/logout', $token);
+    $logout = $request($m_post, $p_logout, $token);
 
     AssertTest(
         $logout['status'] === 200,
@@ -128,7 +133,7 @@ try {
 
 
     // 2.  The old token must no longer authenticate
-    $afterLogout = $request('GET', '/api/me', $token);
+    $afterLogout = $request($m_get, $p_id, $token);
 
     AssertTest(
         $afterLogout['status'] === 401,
@@ -137,7 +142,7 @@ try {
 
 
     // 3.  Log-out without a cookie still succeeds
-    $missingCookie = $request('POST', '/api/logout');
+    $missingCookie = $request($m_post, $p_logout);
 
     AssertTest(
         $missingCookie['status'] === 200,
@@ -146,7 +151,7 @@ try {
 
 
     // 4.  Log-out with a malformed token still succeeds
-    $malformed = $request('POST', 'api/logout', 'invalid-token');
+    $malformed = $request($m_post, 'api/logout', 'invalid-token');
 
     AssertTest(
         $malformed['status'] === 200,
@@ -155,7 +160,7 @@ try {
 
 
     // 5.  Repeating log-out with the old token is safe
-    $repeatedLogout = $request('POST', '/api/logout', $token);
+    $repeatedLogout = $request($m_post, $p_logout, $token);
 
     AssertTest(
         $repeatedLogout['status'] === 200,
@@ -194,7 +199,7 @@ try {
     // 7. Bearer Token returns the correct User data
     $bearerToken = $sessionSvc->Create((string)$userID)->sessionToken;
     $beforeBearerLogout = $request(
-        'GET', '/api/me', null, $bearerToken
+        $m_get, $p_id, null, $bearerToken
     );
 
     AssertTest(
@@ -219,7 +224,7 @@ try {
 
     // 8. Bearer Token transport can Log Out
     $bearerLogout = $request(
-        'POST', '/api/logout', null, $bearerToken
+        $m_post, $p_logout, null, $bearerToken
     );
 
     AssertTest(
@@ -229,7 +234,7 @@ try {
 
     // 9. Bearer Token cannot be reused after revocation
     $afterBearerLogout = $request(
-        'GET', '/api/me', null, $bearerToken
+        $m_get, $p_id, null, $bearerToken
     );
 
     AssertTest(
@@ -248,7 +253,7 @@ try {
     $bearerTokenBoth = $sessionSvc->Create((string)$userID)->sessionToken;
 
     $bothCredentials = $request(
-        'GET', '/api/me',
+        $m_get, $p_id,
         $cookieTokenBoth,
         $bearerTokenBoth
     );
@@ -259,7 +264,7 @@ try {
     );
 
     // 12. Missing credentials cannot access a protected route
-    $missingCredentials = $request('GET', '/api/me');
+    $missingCredentials = $request($m_get, $p_id);
 
     AssertTest(
         $missingCredentials['status'] === 401,
@@ -269,14 +274,14 @@ try {
     // 13. Unsupported authorization scheme cannot authenticate
     $unsupportedScheme = stream_context_create([
         'http' => [
-            'method' => 'GET',
+            'method' => $m_get,
             'ignore_errors' => true,
             'header' => 'Authorization: Basic randomGarbage'
         ]
     ]);
 
     $unsupportedBody = file_get_contents(
-        'http://userbase/api/me',
+        'http://userbase/api/id',
         false,
         $unsupportedScheme
     );
@@ -292,7 +297,7 @@ try {
     );
 
     // 14. Invalid / Unknown Session Token cannot authenticate
-    $invalidToken = $request('GET', '/api/me', 'invalid-session-token');
+    $invalidToken = $request($m_get, $p_id, 'invalid-session-token');
 
     AssertTest(
         $invalidToken['status'] === 401,
@@ -322,7 +327,7 @@ try {
         'Test session expiration was successfully updated'
     );
 
-    $expiredSession = $request('GET', '/api/me', $expiredToken);
+    $expiredSession = $request($m_get, $p_id, $expiredToken);
 
     AssertTest(
         $expiredSession['status'] === 401,

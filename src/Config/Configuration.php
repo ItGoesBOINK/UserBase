@@ -8,6 +8,11 @@ use RuntimeException;
 
 final class Configuration
 {
+    public readonly string $appURL;
+    public readonly string $uiURL;
+    public readonly string $apiRoot;
+    public readonly string $csrfKey;
+
     public readonly string $databaseHost;
     public readonly int $databasePort;
     public readonly string $databaseName;
@@ -24,11 +29,21 @@ final class Configuration
     public readonly ?string $mailFromName;
 
     public readonly ?string $verificationUrlBase;
+    public readonly ?string $verificationRoute;
+    public readonly ?string $verificationPage;
 
     public readonly array $corsAllowedOrigins;
 
     public function __construct()
     {
+        $this->appURL = self::Required('APP_URL');
+        $this->uiURL = self::Required('UI_URL');
+        $this->apiRoot = self::Required('API_ROOT');
+        $this->verificationRoute = self::Required('VERIFICATION_ROUTE');
+        $this->verificationPage = self::Required('VERIFICATION_PAGE');
+
+        $this->csrfKey = self::Required('CSRF_KEY');
+
         $this->databaseHost = self::Required('MYSQL_HOST');
         $this->databasePort = self::RequiredPort('MYSQL_PORT');
         $this->databaseName = self::Required('MYSQL_DATABASE');
@@ -50,7 +65,7 @@ final class Configuration
             self::RequiredInt('SESSION_LIFETIME')
         );
 
-        $this->verificationUrlBase = self::Optional('VERIFICATION_URL_BASE');
+        // $this->verificationUrlBase = self::Optional('VERIFICATION_URL_BASE');
 
         $this->corsAllowedOrigins = self::OptionalList('CORS_ALLOWED_ORIGINS');
 
@@ -59,6 +74,15 @@ final class Configuration
 
     private const string HTTPS = 'HTTPS';
     private const string off = 'off';
+
+    public function GetAPIRootURL(): string
+    { return $this->appURL . '/' . $this->apiRoot . '/'; }
+
+    public function GetEmailVerificationRouteURL(): string
+    { return $this->GetAPIRootURL() . $this->verificationRoute; }
+
+    public function GetEmailVerificationPageURL(): string
+    { return $this->uiURL . '/' . $this->verificationPage; }
 
     public function HTTPS(): string { $_SERVER[self::HTTPS]; }
 

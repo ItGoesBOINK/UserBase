@@ -21,6 +21,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
+      - ./public:/var/www/html/public
       - userbase-db-data:/var/lib/mysql
       - ./database/migrations/001_create_account_tables.sql:/docker-entrypoint-initdb.d/001_create_account_tables.sql:ro
     healthcheck:

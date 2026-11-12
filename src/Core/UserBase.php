@@ -9,6 +9,7 @@ use PDO;
 
 use UserBase\Database\DatabaseProxy;
 use UserBase\Service\SessionService;
+use UserBase\Service\CSRFTokenService;
 use UserBase\Repository\AuthSessionRepository;
 use UserBase\Config\Configuration;
 use UserBase\Config\SessionSettings;
@@ -47,6 +48,7 @@ class UserBase
 
     // Session Dependencies
     public readonly SessionService $sessionService;
+    public readonly CSRFTokenService $csrfTokenService;
     public readonly SessionCookie $cookie;
     public readonly AuthSessionRepository $sessionRepo;
 
@@ -158,6 +160,9 @@ class UserBase
 
         $this->sessionAuthenticator =
         new SessionAuthenticator($this->sessionService, $this->credentialResolver);
+
+        $this->csrfTokenService =
+        new CSRFTokenService($this->config);
     }
 
     protected function InitRouter(): void
@@ -207,6 +212,7 @@ class UserBase
             $this->clock,
             $this->connection,
             $this->sessionService,
+            $this->csrfTokenService,
             $this->cookie,
             $this->credentialResolver
         );

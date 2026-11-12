@@ -12,6 +12,7 @@ use UserBase\Http\RequestContext;
 use UserBase\Http\RequestPipeline;
 use UserBase\Http\Route;
 use UserBase\Http\RoutePolicy;
+use UserBase\Security\Authentication\SessionCredentialType;
 use UserBase\Tests\MockAuthenticator;
 use UserBase\Tests\TestController;
 
@@ -77,7 +78,7 @@ function TestRoutePolicy(
 
 
 $anonymous = AuthenticationContext::Anonymous();
-$authenticated = AuthenticationContext::Authenticated('test-user-123');
+$authenticated = AuthenticationContext::Authenticated('test-user-123', SessionCredentialType::Cookie);
 
 // Public
 TestRoutePolicy(
@@ -134,6 +135,7 @@ $output = $result['output'];
 $errors = $result['errors'];
 $exitCode = $result['exitCode'];
 
+//var_dump($result);
 $response = json_decode($result['output'], true, flags: JSON_THROW_ON_ERROR);
 
 AssertTest(

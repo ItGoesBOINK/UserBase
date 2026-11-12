@@ -94,7 +94,9 @@ footer
 
 if [[ "$logs" == true ]]; then
   header "LOGS"
-  docker compose logs --tail=100 userbase
+  LOGS=$(docker compose logs --tail=100 userbase)
+  echo "$LOGS" | sed 's/, /,\
+  - /g'
 fi
 footer
 printf "\n"

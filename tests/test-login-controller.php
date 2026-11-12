@@ -200,13 +200,14 @@ try {
 
     $bearerToken = $bearerLogin['body']['data']['session_token'];
     $authenticated = $Request(
-        'GET', '/api/me', null,
+        'GET', '/api/id', null,
         [
             'Authorization: Bearer ' . $bearerToken,
             'Accept: application/json'
         ]
     );
 
+    //var_dump($authenticated);
     AssertTest(
         $authenticated['status'] === 200,
         'Bearer Token authenticates successfully'

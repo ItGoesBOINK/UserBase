@@ -49,7 +49,7 @@ final class SessionService
         $this->authSessionRepo->Create(
             $userID,
             $sessionTokenHash,
-            $syncTokenHash,
+            //$syncTokenHash,
             $expiresAt
         );
 
@@ -87,6 +87,7 @@ final class SessionService
     /**
      * Rotate a CSRF Synchronization Token
      */
+    /*
     public function RotateSyncToken(string $sessionToken): ?string
     {
         if (!InputValidator::IsValidSessionToken($sessionToken)) { return null; }
@@ -103,10 +104,12 @@ final class SessionService
 
         return $updated ? $syncToken : null;
     }
+    */
 
     /**
      * Validate a sync token against an active session.
      */
+    /*
     public function ValidateSyncToken(
         string $sessionToken,
         string $syncToken
@@ -122,4 +125,5 @@ final class SessionService
             $this->clock->Now()
         );
     }
+    */
 }

@@ -23,21 +23,20 @@ final class AuthSessionRepository
     public function Create(
         string $userID,
         string $sessionTokenHash,
-        string $syncTokenHash,
+        // string $syncTokenHash,
         DateTimeImmutable $expiresAt
     ): string {
 
         $sql = $this->connection->prepare(
             'INSERT INTO auth_sessions
-            (user_id, session_token_hash, sync_token_hash, expires_at)
+            (user_id, session_token_hash, expires_at)
             VALUES
-            (:user_id, :session_token_hash, :sync_token_hash, :expires_at)'
+            (:user_id, :session_token_hash, :expires_at)'
         );
 
         $sql->execute([
             'user_id' => $userID,
             'session_token_hash' => TokenUtility::HashToBinary($sessionTokenHash),
-            'sync_token_hash' => TokenUtility::HashToBinary($syncTokenHash),
             'expires_at' => TimeUtility::FormatTimestamp($expiresAt)
         ]);
 
@@ -96,6 +95,7 @@ final class AuthSessionRepository
     /**
      * Replace the sync-token hash for an active session.
      */
+    /*
     public function UpdateSyncTokenHash(
         string $sessionTokenHash,
         string $syncTokenHash,
@@ -117,10 +117,11 @@ final class AuthSessionRepository
 
         return $sql->rowCount() === 1;
     }
-
+    */
     /**
      * Verify a sync token against an active session.
      */
+    /*
     public function HasValidSyncToken(
         string $sessionTokenHash,
         string $syncTokenHash,
@@ -144,6 +145,7 @@ final class AuthSessionRepository
 
         return $sql->fetchColumn() !== false;
     }
+    */
 }
 
 

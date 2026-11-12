@@ -7,8 +7,7 @@ namespace UserBase\Security\Authentication;
 final readonly class SessionGrant
 {
     public function __construct(
-        public string $sessionToken,
-        public string $syncToken
+        public string $sessionToken
     ) {}
 }
 

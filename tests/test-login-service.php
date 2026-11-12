@@ -69,7 +69,7 @@ try {
     // 4. Successful login returns a valid session token
     $grant = $login->Login($username, $password);
     $sessionToken = $grant->sessionToken;
-    $syncToken = $grant->syncToken;
+    //$syncToken = $grant->syncToken;
 
     AssertTest(
         IsValidToken($sessionToken),
@@ -94,15 +94,18 @@ try {
         'Session Token should be valid'
     );
 
+    /*
     AssertTest(
         InputValidator::IsValidSessionToken($syncToken),
         'CSRF Sync-Token should be valid'
     );
 
+
     AssertTest(
         $sessionToken !== $syncToken,
         'Session Token and CSRF Sync-Token should be different'
     );
+    */
 
 
     // 5. Reject an incorrect password

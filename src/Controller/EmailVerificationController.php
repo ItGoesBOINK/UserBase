@@ -8,6 +8,8 @@ use UserBase\Service\EmailVerificationService;
 
 final class EmailVerificationController extends ControllerBase
 {
+    private const string TOKEN_ID = 'token';
+
     public function __construct(
         private readonly EmailVerificationService $verification
     ){}
@@ -31,9 +33,9 @@ final class EmailVerificationController extends ControllerBase
 
         if (
             !is_array($body) ||
-            !isset($body['token']) ||
-            !is_string($body['token']) ||
-            $body['token'] === ''
+            !isset($body[self::TOKEN_ID]) ||
+            !is_string($body[self::TOKEN_ID]) ||
+            $body[self::TOKEN_ID] === ''
         ) {
             $this->Error(
                 'invalid_request',
@@ -42,7 +44,7 @@ final class EmailVerificationController extends ControllerBase
             );
         }
 
-        $this->verification->VerifyToken($body['token']);
+        $this->verification->VerifyToken($body[self::TOKEN_ID]);
 
         $this->Success([
             'message' => 'E-Mail Address verified successfully'

@@ -55,7 +55,7 @@ final class SessionAuthenticator implements IAuthenticator
 
         //error_log('Authentication context: AUTHENTICATED');
 
-        return AuthenticationContext::Authenticated((string) $userID);
+        return AuthenticationContext::Authenticated((string) $userID, $credential->type);
     }
 }
 

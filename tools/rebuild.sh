@@ -9,8 +9,9 @@ cd "$(dirname "$0")/.."
 # Rebuld the application image using the latest local source and configuration
 docker compose build userbase
 
+docker compose down -v
 # Recreate and start the application container in the background
-docker compose up -d --no-deps userbase
+docker compose up -d # --no-deps userbase
 
 # Show the current container status
 docker compose ps userbase
