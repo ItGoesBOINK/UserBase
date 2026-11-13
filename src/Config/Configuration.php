@@ -19,6 +19,8 @@ final class Configuration
     public readonly string $databaseUser;
     public readonly string $databasePassword;
 
+    public readonly int $rateLimitCleanup_CRONBatchSize;
+
     public readonly SessionSettings $session;
 
     public readonly ?string $smtpHost;
@@ -49,6 +51,9 @@ final class Configuration
         $this->databaseName = self::Required('MYSQL_DATABASE');
         $this->databaseUser = self::Required('MYSQL_USER');
         $this->databasePassword = self::Required('MYSQL_PASSWORD');
+
+        $this->rateLimitCleanup_CRONBatchSize =
+            self::RequiredInt("RATELIMIT_CRON_BATCH_SIZE");
 
         $this->smtpHost = self::Optional('SMTP_HOST');
         $this->smtpPort = self::OptionalPort('SMTP_PORT');

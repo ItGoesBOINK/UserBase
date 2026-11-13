@@ -36,7 +36,7 @@ try {
     // 2. Create a session
     $grant = $service->Create($userID);
     $sessionToken = $grant->sessionToken;
-    $syncToken = $grant->syncToken;
+    //$syncToken = $grant->syncToken;
 
     AssertTest(
         IsValidToken($sessionToken),
@@ -48,12 +48,12 @@ try {
         IsValidToken($syncToken),
         'Create returns a valid 64-character CSRF Synchronizer Token'
     );
-    */
 
     AssertTest(
         $sessionToken !== $syncToken,
         'Session and Sync Tokens are different'
     );
+    */
 
     // 3. Confirm the database stores only the token hash
     $sessionTokenHash = hash('sha256', $sessionToken);

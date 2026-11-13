@@ -96,7 +96,7 @@ class DefaultRouteModule extends RouteModule
         $post = 'POST';
         $api = '/api/';
 
-        $p_health   = $api . 'health';
+        $p_health   = $api . 'he    alth';
         $p_id       = $api . 'id';
         $p_login    = $api . 'login';
         $p_logout   = $api . 'logout';
@@ -164,7 +164,7 @@ class DefaultRouteModule extends RouteModule
             new RouteDescriptor($get,  $p_health,   $pub, $this->ctrlHealth),
             new RouteDescriptor($get,  $p_id,       $req, $this->ctrlID),
             new RouteDescriptor($post, $p_login,    $pub, $this->ctrlLogin),
-            new RouteDescriptor($post, $p_logout,   $pub, $this->ctrlLogout),
+            new RouteDescriptor($post, $p_logout,   $pub, $this->ctrlLogout, true),
             new RouteDescriptor($post, $p_register, $pub, $this->ctrlRegistration),
             new RouteDescriptor($post, $p_verify,   $pub, $this->ctrlVerification),
         ];

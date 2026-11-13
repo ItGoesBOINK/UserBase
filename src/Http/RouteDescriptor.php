@@ -12,7 +12,8 @@ final class RouteDescriptor
         public readonly string $method,
         public readonly string $path,
         public readonly AuthenticationRequirement $authReq,
-        public readonly IRequestHandler $handler
+        public readonly IRequestHandler $handler,
+        public readonly bool $requiresCsrf = false
     ) {
 
         $allowed = ['GET', 'POST', 'OPTIONS'];

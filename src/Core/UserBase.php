@@ -167,7 +167,11 @@ class UserBase
 
     protected function InitRouter(): void
     {
-        $this->pipeline = new RequestPipeline($this->sessionAuthenticator);
+        $this->pipeline = new RequestPipeline(
+            $this->sessionAuthenticator,
+            $this->csrfTokenService
+        );
+
         $this->router = new Router($this->pipeline);
     }
 
@@ -178,31 +182,34 @@ class UserBase
         string $method,
         string $routePath,
         AuthenticationRequirement $authReq,
-        IRequestHandler $handler
+        IRequestHandler $handler,
+        bool $requiresCsrf = false
     ): void {
         $this->CheckCanRoute();
         $this->CheckValidMethod($method);
 
         $this->router->Add(
             $method, $routePath,
-            new Route($handler, new RoutePolicy($authReq))
+            new Route($handler, new RoutePolicy($authReq, $requiresCsrf))
         );
     }
 
     public function AddGetRoute(
         string $routePath,
         AuthenticationRequirement $authReq,
-        IRequestHandler $handler
+        IRequestHandler $handler,
+        bool $requiresCsrf = false
     ): void {
-        $this->AddRoute('GET', $routePath, $authReq, $handler);
+        $this->AddRoute('GET', $routePath, $authReq, $handler, $requiresCsrf);
     }
 
     public function AddPostRoute(
         string $routePath,
         AuthenticationRequirement $authReq,
-        IRequestHandler $handler
+        IRequestHandler $handler,
+        bool $requiresCsrf = false
     ): void {
-        $this->AddRoute('POST', $routePath, $authReq, $handler);
+        $this->AddRoute('POST', $routePath, $authReq, $handler, $requiresCsrf);
     }
 
     public function AddDefaultRoutes(): void
@@ -230,7 +237,8 @@ class UserBase
                 $d->method,
                 $d->path,
                 $d->authReq,
-                $d->handler
+                $d->handler,
+                $d->requiresCsrf
             );
         }
     }

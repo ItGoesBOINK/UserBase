@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use UserBase\Database\DatabaseConnection;
+use UserBase\Database\DatabaseProxy;
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 try {
-    $database = new DatabaseConnection($config);
+    $database = new DatabaseProxy($config);
     $pdo = $database->GetConnection();
 
     // Keep database timestamps consistent with application UTC timestamps

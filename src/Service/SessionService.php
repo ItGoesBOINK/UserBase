@@ -36,10 +36,10 @@ final class SessionService
     public function Create(string $userID): SessionGrant
     {
         $sessionToken = TokenUtility::NewToken();
-        $syncToken = TokenUtility::NewToken();
+        //$syncToken = TokenUtility::NewToken();
 
         $sessionTokenHash = TokenUtility::TokenToHash($sessionToken);
-        $syncTokenHash = TokenUtility::TokenToHash($syncToken);
+        //$syncTokenHash = TokenUtility::TokenToHash($syncToken);
 
         $now = $this->clock->Now();
         $expiresAt = $now->modify(
@@ -53,7 +53,7 @@ final class SessionService
             $expiresAt
         );
 
-        return new SessionGrant($sessionToken, $syncToken);
+        return new SessionGrant($sessionToken, $expiresAt);
     }
 
     /**

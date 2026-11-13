@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UserBase\Security\Authentication;
 
 use UserBase\Http\AuthenticationContext;
+use UserBase\Http\AuthenticationResult;
 use UserBase\Http\RequestContext;
 use UserBase\Service\SessionService;
 use UserBase\Config\SessionSettings;
@@ -18,24 +19,23 @@ final class SessionAuthenticator implements IAuthenticator
     ) {}
 
     public function Authenticate(
-        RequestContext $context
-    ): AuthenticationContext {
+        RequestContext $reqContext
+    ): AuthenticationResult {
 
-        $credential = $this->credentialResolver->Resolve($context);
-
+        $credential = $this->credentialResolver->Resolve($reqContext);
         //error_log('Cookie received: ' . ($context->GetCookie('userbase_session') !== null ? 'YES' : 'NO'));
         //error_log('Credential resolved: ' . ($credential !== null ? 'YES' : 'NO'));
         //error_log('Credential type: ' . ($credential?->type->name ?? 'NONE'));
 
         if ($credential === null)
-            { return AuthenticationContext::Anonymous(); }
+        { return new AuthenticationResult(AuthenticationContext::Anonymous(), null); }
 
         $session = $this->sessions->Validate($credential->token);
 
         //error_log('Session validated: ' . ($session !== null ? 'YES' : 'NO'));
 
         if ($session === null)
-            { return AuthenticationContext::Anonymous(); }
+        { return new AuthenticationResult(AuthenticationContext::Anonymous(), $credential); }
 
         $userID = $session['user_id'] ?? null;
 
@@ -51,11 +51,12 @@ final class SessionAuthenticator implements IAuthenticator
                    !$isDigit || $zeroOrLess;
 
         if ($isInvalid)
-            { return AuthenticationContext::Anonymous(); }
+        { return new AuthenticationResult(AuthenticationContext::Anonymous(), $credential); }
 
         //error_log('Authentication context: AUTHENTICATED');
 
-        return AuthenticationContext::Authenticated((string) $userID, $credential->type);
+        $authContext = AuthenticationContext::Authenticated((string) $userID, $credential->type);
+        return new AuthenticationResult($authContext, $credential);
     }
 }
 
