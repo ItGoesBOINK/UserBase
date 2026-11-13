@@ -96,7 +96,7 @@ class DefaultRouteModule extends RouteModule
         $post = 'POST';
         $api = '/api/';
 
-        $p_health   = $api . 'he    alth';
+        $p_health   = $api . 'health';
         $p_id       = $api . 'id';
         $p_login    = $api . 'login';
         $p_logout   = $api . 'logout';

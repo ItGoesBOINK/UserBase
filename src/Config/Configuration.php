@@ -19,6 +19,7 @@ final class Configuration
     public readonly string $databaseUser;
     public readonly string $databasePassword;
 
+    public readonly string $rateLimitKey;
     public readonly int $rateLimitCleanup_CRONBatchSize;
 
     public readonly SessionSettings $session;
@@ -52,6 +53,7 @@ final class Configuration
         $this->databaseUser = self::Required('MYSQL_USER');
         $this->databasePassword = self::Required('MYSQL_PASSWORD');
 
+        $this->rateLimitKey = self::Required('RATELIMIT_KEY');
         $this->rateLimitCleanup_CRONBatchSize =
             self::RequiredInt("RATELIMIT_CRON_BATCH_SIZE");
 

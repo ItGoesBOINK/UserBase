@@ -6,12 +6,14 @@ require_once __DIR__ . '/test_base.php';
 require_once __DIR__ . '/TestController.php';
 require_once __DIR__ . '/MockAuthenticator.php';
 
+use UserBase\Config\Configuration;
 use UserBase\Http\AuthenticationContext;
 use UserBase\Http\AuthenticationRequirement;
 use UserBase\Http\RequestContext;
 use UserBase\Http\RequestPipeline;
 use UserBase\Http\Route;
 use UserBase\Http\RoutePolicy;
+use UserBase\Service\CSRFTokenService;
 use UserBase\Security\Authentication\SessionCredentialType;
 use UserBase\Tests\MockAuthenticator;
 use UserBase\Tests\TestController;
@@ -56,13 +58,15 @@ function RunPipelineChild(string $authentication): array
 }
 
 function TestRoutePolicy(
+    Configuration $config,
     AuthenticationRequirement $authReq,
     AuthenticationContext $authContext,
     bool $expectedExecution,
     string $description
 ): void {
+    $tokenService = new CSRFTokenService($config);
     $authenticator = new MockAuthenticator($authContext);
-    $pipeline = new RequestPipeline($authenticator);
+    $pipeline = new RequestPipeline($authenticator, $tokenService);
     $controller = new TestController();
     $policy = new RoutePolicy($authReq);
     $route = new Route($controller, $policy);
@@ -82,6 +86,7 @@ $authenticated = AuthenticationContext::Authenticated('test-user-123', SessionCr
 
 // Public
 TestRoutePolicy(
+    $config,
     AuthenticationRequirement::Public,
     $anonymous,
     true,   // Expected behavior
@@ -89,6 +94,7 @@ TestRoutePolicy(
 );
 
 TestRoutePolicy(
+    $config,
     AuthenticationRequirement::Public,
     $authenticated,
     true,   // Expected behavior
@@ -98,6 +104,7 @@ TestRoutePolicy(
 
 // Optional
 TestRoutePolicy(
+    $config,
     AuthenticationRequirement::Optional,
     $anonymous,
     true,   // Expected behavior
@@ -105,6 +112,7 @@ TestRoutePolicy(
 );
 
 TestRoutePolicy(
+    $config,
     AuthenticationRequirement::Optional,
     $authenticated,
     true,   // Expected behavior

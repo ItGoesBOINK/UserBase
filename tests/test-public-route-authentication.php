@@ -16,6 +16,7 @@ use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialResolver;
 use UserBase\Security\Cookies\SessionCookie;
 use UserBase\Service\SessionService;
+use UserBase\Service\CSRFTokenService;
 use UserBase\Time\SystemClock;
 
 // Authentication Dependencies
@@ -35,7 +36,8 @@ $authenticator = new SessionAuthenticator(
     $credentialResolver
 );
 
-$pipeline = new RequestPipeline($authenticator);
+$tokenService = new CSRFTokenService($config);
+$pipeline = new RequestPipeline($authenticator, $tokenService);
 
 // Test handler captures the resulting RequestContext
 $handler = new class implements IRequestHandler

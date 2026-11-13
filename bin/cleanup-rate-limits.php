@@ -44,7 +44,7 @@ try {
 
     } while ($deleted === $batchSize);
 
-    $timestamp - gmdate('Y-m-d\TH:i:s\Z');
+    $timestamp = gmdate('Y-m-d\TH:i:s\Z');
 
     echo "[{$timestamp}]: Rate-Limit Clean-Up Deleted {$totalDeleted} expired events.\n";
 

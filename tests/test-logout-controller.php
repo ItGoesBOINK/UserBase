@@ -19,7 +19,8 @@ $request = function (
     string $method,
     string $path,
     ?string $cookieToken = null,
-    ?string $bearerToken = null
+    ?string $bearerToken = null,
+    ?string $csrfToken = null
 ): array {
     $headers = [];
 
@@ -29,6 +30,10 @@ $request = function (
 
     if ($bearerToken !== null) {
         $headers[] = "Authorization: Bearer {$bearerToken}";
+    }
+
+    if ($csrfToken !== null) {
+        $headers[] = "X-CSRF-Token: {$csrfToken}";
     }
 
     $context = stream_context_create([
@@ -124,7 +129,14 @@ try {
         'Cookie Authentication returns the correct E-Mail'
     );
 
-    $logout = $request($m_post, $p_logout, $token);
+    $csrfToken = $beforeLogout['body']['data']['csrf_token'] ?? null;
+
+    AssertTest(
+        is_string($csrfToken) && $csrfToken !== '',
+        'Cookie Authentication returns a CSRF Token'
+    );
+
+    $logout = $request($m_post, $p_logout, $token, null, $csrfToken);
 
     AssertTest(
         $logout['status'] === 200,

@@ -6,6 +6,7 @@ require_once __DIR__ . '/test_base.php';
 require_once __DIR__ . '/TestController.php';
 require_once __DIR__ . '/MockAuthenticator.php';
 
+use UserBase\Service\CSRFTokenService;
 use UserBase\Http\AuthenticationContext;
 use UserBase\Http\AuthenticationRequirement;
 use UserBase\Http\RequestContext;
@@ -23,8 +24,9 @@ $authentication = $authenticated
     ? AuthenticationContext::Authenticated('test-user-123', SessionCredentialType::Cookie)
     : AuthenticationContext::Anonymous();
 
+    $tokenService = new CSRFTokenService($config);
     $authenticator = new MockAuthenticator($authentication);
-    $pipeline = new RequestPipeline($authenticator);
+    $pipeline = new RequestPipeline($authenticator, $tokenService);
 
     $controller = new TestController();
     $policy = new RoutePolicy(AuthenticationRequirement::Required);
