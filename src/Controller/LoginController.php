@@ -26,6 +26,7 @@ final class LoginController extends ControllerBase
     {
         try {
 
+            /*
             $rawInput = file_get_contents('php://input');
 
             if ($rawInput === false) {
@@ -42,6 +43,9 @@ final class LoginController extends ControllerBase
                 512,
                 JSON_THROW_ON_ERROR
             );
+            */
+
+            $body = $context->body;
 
             if (
                 !is_array($body) ||

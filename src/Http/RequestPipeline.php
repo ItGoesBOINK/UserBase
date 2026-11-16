@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UserBase\Http;
 
 use UserBase\Service\CSRFTokenService;
+use UserBase\Security\RateLimit\RateLimitManager
 use UserBase\Security\Authentication\IAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialType;
 
@@ -12,7 +13,8 @@ final class RequestPipeline
 {
     public function __construct(
         private readonly IAuthenticator $auth,
-        private readonly CSRFTokenService $csrfTokenService
+        private readonly CSRFTokenService $csrfTokenService,
+        private readonly RateLimitManager $rateLimitManager
     ) {}
 
     public function Process(

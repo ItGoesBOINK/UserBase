@@ -21,6 +21,7 @@ use UserBase\Security\Cookies\SessionCookie;
 use UserBase\Security\Authentication\IAuthenticator;
 use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialResolver;
+use UserBase\Security\RateLimit\RateLimitManager;
 
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\CorsHandler;
@@ -56,6 +57,7 @@ class UserBase
     protected readonly IAuthenticator $sessionAuthenticator;
 
     // Router and Pipeline
+    protected readonly RateLimitManager $rateLimitManager;
     protected readonly RequestPipeline $pipeline;
     protected readonly Router $router;
 
@@ -81,6 +83,7 @@ class UserBase
             $this->InitClock();
             $this->InitDatabaseConnection();
             $this->InitSessionDependencies();
+            $this->InitRateLimitManager();
             $this->InitRouter();
 
             $this->isInitialized = true;
@@ -165,11 +168,17 @@ class UserBase
         new CSRFTokenService($this->config);
     }
 
+    protected function InitRateLimitManager(): void
+    {
+        $this->rateLimitManager = new RateLimitManager($this->config);
+    }
+
     protected function InitRouter(): void
     {
         $this->pipeline = new RequestPipeline(
             $this->sessionAuthenticator,
-            $this->csrfTokenService
+            $this->csrfTokenService,
+            $this->rateLimitManager
         );
 
         $this->router = new Router($this->pipeline);
@@ -221,7 +230,8 @@ class UserBase
             $this->sessionService,
             $this->csrfTokenService,
             $this->cookie,
-            $this->credentialResolver
+            $this->credentialResolver,
+            $this->rateLimitManager
         );
 
         $this->RegisterRouteModule($defaultModule);
@@ -247,6 +257,7 @@ class UserBase
     {
         $this->CheckCanRoute();
 
+        /*
         $method  = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri     = $_SERVER['REQUEST_URI']    ?? '/';
         $cookies = $_COOKIE;
@@ -257,6 +268,8 @@ class UserBase
             $method, $uri,
             $headers, $cookies
         );
+        */
+        $reqContext = RequestContext::GetActiveContext();
 
         $this->router->Dispatch($reqContext);
     }

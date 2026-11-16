@@ -36,6 +36,7 @@ use UserBase\Repository\EmailVerificationTokenRepository;
 
 use UserBase\Security\Cookies\SessionCookie;
 use UserBase\Security\Authentication\SessionCredentialResolver;
+use UserBase\Security\RateLimit\RateLimitManager;
 
 class DefaultRouteModule extends RouteModule
 {
@@ -66,7 +67,8 @@ class DefaultRouteModule extends RouteModule
         SessionService $sessionService,
         CSRFTokenService $csrfTokenService,
         SessionCookie $cookie,
-        SessionCredentialResolver $credentialResolver
+        SessionCredentialResolver $credentialResolver,
+        RateLimitManager $rateLimitManager
     ) {
         $this->InitDefaultRoutes(
             $config,
@@ -75,7 +77,8 @@ class DefaultRouteModule extends RouteModule
             $sessionService,
             $csrfTokenService,
             $cookie,
-            $credentialResolver
+            $credentialResolver,
+            $rateLimitManager
         );
     }
 
@@ -86,7 +89,8 @@ class DefaultRouteModule extends RouteModule
         SessionService $sessionService,
         CSRFTokenService $csrfTokenService,
         SessionCookie $cookie,
-        SessionCredentialResolver $credentialResolver
+        SessionCredentialResolver $credentialResolver,
+        RateLimitManager $rateLimitManager
     ): void {
 
         $pub = AuthenticationRequirement::Public;

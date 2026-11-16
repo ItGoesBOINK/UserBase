@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UserBase\Http;
 
 use InvalidArgumentException;
+use UserBase\Security\RateLimit\RateLimitRequirement;
 
 final class RouteDescriptor
 {
@@ -13,7 +14,8 @@ final class RouteDescriptor
         public readonly string $path,
         public readonly AuthenticationRequirement $authReq,
         public readonly IRequestHandler $handler,
-        public readonly bool $requiresCsrf = false
+        public readonly bool $requiresCsrf = false,
+        public readonly array $rateLimits = []
     ) {
 
         $allowed = ['GET', 'POST', 'OPTIONS'];
@@ -22,6 +24,13 @@ final class RouteDescriptor
             throw new InvalidArgumentException(
                 "Method [{$method}] is not allowed"
             );
+        }
+
+        foreach ($this->rateLimits as $req)
+        {
+            if (!is_string($req) || $req === '')  {
+                throw new InvalidArgumentException('Rate-Limits must contain RateLimitRequirement instances');
+            }
         }
 
     }
