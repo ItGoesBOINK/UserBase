@@ -18,18 +18,7 @@ final class EmailVerificationController extends ControllerBase
     #[\Override]
     public function Execute(RequestContext $context): void
     {
-        try {
-            $body = json_decode(
-                file_get_contents('php://input'),
-                true, 512, JSON_THROW_ON_ERROR
-            );
-        } catch (\JsonException $e) {
-            $this->Error(
-            'invalid_json',
-            'The request body must contain valid JSON',
-            400
-            );
-        }
+        $body = $context->body;
 
         if (
             !is_array($body) ||

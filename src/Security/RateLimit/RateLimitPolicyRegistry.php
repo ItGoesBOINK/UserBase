@@ -26,7 +26,7 @@ final class RateLimitPolicyRegistry
         throw new InvalidArgumentException
         ("Rate-Limit Policy [{$k}] is already registered"); }
 
-        if ($subjectType === '') {
+        if (trim($subjectType) === '') {
         throw new InvalidArgumentException
         ("Rate-Limit Policy subject-type cannot be empty"); }
 

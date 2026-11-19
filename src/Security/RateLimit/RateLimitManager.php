@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace UserBase\Security\RateLimit;
 
+use InvalidArgumentException;
 use UserBase\Config\Configuration;
 
 final class RateLimitManager
 {
-    private readonly RateLimitPolicyRegistry $policies;
-    private readonly RateLimitSubjectResolverRegistry $resolvers;
+    public readonly RateLimitPolicyRegistry $policies;
+    public readonly RateLimitSubjectResolverRegistry $resolvers;
 
     public function __construct(Configuration $config)
     {
@@ -30,6 +31,13 @@ final class RateLimitManager
         int $interval,
         string $subjectType
     ): void {
+
+        if ($this->FindResolver($subjectType) === null) {
+            throw new InvalidArgumentException(
+                "No Resolver is registered for Rate-Limit Subject-Type [{$subjectType}]"
+            );
+        }
+
         $policy = new RateLimitPolicy($policyKey, $attemptMax, $interval);
         $this->policies->Register($policy, $subjectType);
     }

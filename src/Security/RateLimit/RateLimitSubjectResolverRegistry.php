@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace UserBase\Security\RateLimit;
 
+use InvalidArgumentException;
+
 final class RateLimitSubjectResolverRegistry
 {
     /** @var array<string, IRateLimitSubjectResolver> */
@@ -14,7 +16,7 @@ final class RateLimitSubjectResolverRegistry
         IRateLimitSubjectResolver $resolver
     ): void {
 
-        if ($subjectType === '')
+        if (trim($subjectType) === '')
         { throw new InvalidArgumentException('Rate-Limit Subject Type cannot be empty'); }
 
         if (isset($this->resolvers[$subjectType]))

@@ -4,10 +4,27 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/test_base.php';
 
+use InvalidArgumentException;
 use UserBase\Security\RateLimit\RateLimitManager;
 use UserBase\Security\RateLimit\RateLimitSubjectType;
+use UserBase\Security\RateLimit\RateLimitPolicy;
 use UserBase\Security\RateLimit\ClientIPResolver;
 use UserBase\Security\RateLimit\AccountIdentifierResolver;
+use UserBase\Security\RateLimit\RateLimitPolicyRegistry;
+
+function AssertThrows(
+    callable $action,
+    string $message
+): void {
+    try {
+        $action();
+    } catch (InvalidArgumentException $e) {
+        AssertTest(true, $message);
+        return;
+    }
+
+    AssertTest(false, $message);
+}
 
 // Initialize
 
@@ -84,6 +101,61 @@ AssertTest(
 AssertTest(
     $manager->FindResolver('unknown:subject') === null,
     'Manager returns null for unknown resolver'
+);
+
+// Invalid Policies
+
+AssertThrows(
+    fn() => new RateLimitPolicy('', 10, 300),
+    'RateLimitPolicy rejects an empty policy key'
+);
+
+AssertThrows(
+    fn() => new RateLimitPolicy('login', 0, 300),
+    'RateLimitPolicy rejects zero-or-less maximum attempts'
+);
+
+AssertThrows(
+    fn() => new RateLimitPolicy('login', 10, 0),
+    'RateLimitPolicy rejects a zero-length window'
+);
+
+// Reject Empty Subject Type
+AssertThrows(
+    fn() => $manager->policies->Register(
+        new RateLimitPolicy('test:empty-subject', 5, 300), ''
+    ),
+    'Policy Registry rejects an empty Subject-Type'
+);
+
+// Reject a whitespace-only subject type
+AssertThrows(
+    fn() => $manager->policies->Register(
+        new RateLimitPolicy('test:whitespace-subject', 5, 300), '   '
+    ),
+    'Policy Registry rejects an empty Subject-Type'
+);
+
+// Reject duplicate policy keys
+$manager->policies->Register(
+    new RateLimitPolicy('test:duplicate', 5, 300), $t_clientIP
+);
+
+AssertThrows(
+    fn() => $manager->policies->Register(
+        new RateLimitPolicy('test:duplicate', 10, 600), $t_clientIP
+    ),
+    'Policy Registry rejects an white-space only Subject-Type'
+);
+
+// Accepts a valid policy
+$manager->policies->Register(
+    new RateLimitPolicy('test:valid', 5, 300), $t_clientIP
+);
+
+AssertTest(
+    $manager->policies->Find('test:valid') !== null,
+    'Policy Registry rejects an white-space only Subject-Type'
 );
 
 HandleComplete(__FILE__);

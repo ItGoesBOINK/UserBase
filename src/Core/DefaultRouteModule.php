@@ -97,6 +97,9 @@ class DefaultRouteModule extends RouteModule
         $pub = AuthenticationRequirement::Public;
         $req = AuthenticationRequirement::Required;
 
+        $rateLimit_clientIP = RateLimitSubjectType::ClientIP->name;
+        $rateLimit_accountID = RateLimitSubjectType::AccountIdentifier->name;
+
         $get = 'GET';
         $post = 'POST';
         $api = '/api/';
@@ -108,25 +111,58 @@ class DefaultRouteModule extends RouteModule
         $p_register = $api . 'register';
         $p_verify   = $api . 'verify';
 
+        $t_min5 = 300;
+        $t_hr1 = 3600;
+
+
+        // Login Rate-Limit Policies
         $policyKey_loginIP = 'login:ip';
         $policyKey_loginAccount = 'login:account';
         $policies_login = [$policyKey_loginIP, $policyKey_loginAccount];
 
         $rateLimitManager->AddPolicy(
-            $policyKey_loginIP, 10, 300,
-            RateLimitSubjectType::ClientIP->name
+            $policyKey_loginIP, 10, $t_min5,
+            $rateLimit_clientIP
         );
 
         $rateLimitManager->AddPolicy(
-            $policyKey_loginAccount, 10, 300,
-            RateLimitSubjectType::AccountIdentifier->name
+            $policyKey_loginAccount, 10, $t_min5,
+            $rateLimit_accountID
         );
 
+
+        // Registration Rate-Limit Policies
+        $policyKey_registrationIP = 'registration:ip';
+        $policies_registration = [$policyKey_registrationIP];
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_registrationIP, 5, $t_hr1,
+            $rateLimit_clientIP
+        );
+
+
+        // E-Mail Verification Rate-Limit Policies
+        $policyKey_verificationIP = 'verification:ip';
+        $policies_verification = [$policyKey_verificationIP];
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_verificationIP, 10, 300,
+            $rateLimit_clientIP
+        );
+
+
+
+        // Init E-Mail Sender
         $this->emailSender = new PHPMailerEmailSender($config);
 
+        // Init User Repository
         $this->userRepo = new UserRepository($connection);
+
+        // Init E-Mail Verification Token Repository
         $this->verificationTokenRepo = new EmailVerificationTokenRepository($connection);
 
+
+        // Init Services
         $this->serviceLogin = new LoginService($this->userRepo, $sessionService);
 
         $this->serviceEmailVerification = new EmailVerificationService(
@@ -143,10 +179,11 @@ class DefaultRouteModule extends RouteModule
             $config
         );
 
+
+
+        // Init Route Controllers
         $this->ctrlHealth =
             new HealthController();
-
-
 
         $this->ctrlID =
             new IDController(
@@ -179,13 +216,15 @@ class DefaultRouteModule extends RouteModule
             new EmailVerificationController
                 ($this->serviceEmailVerification);
 
+
+        // Construct Route Descriptors
         $this->descriptors = [
             new RouteDescriptor($get,  $p_health,   $pub, $this->ctrlHealth,       false, []),
             new RouteDescriptor($get,  $p_id,       $req, $this->ctrlID,           false, []),
             new RouteDescriptor($post, $p_login,    $pub, $this->ctrlLogin,        false, $policies_login),
             new RouteDescriptor($post, $p_logout,   $pub, $this->ctrlLogout,       true,  []),
-            new RouteDescriptor($post, $p_register, $pub, $this->ctrlRegistration, false, []),
-            new RouteDescriptor($post, $p_verify,   $pub, $this->ctrlVerification, false, []),
+            new RouteDescriptor($post, $p_register, $pub, $this->ctrlRegistration, false, $policies_registration),
+            new RouteDescriptor($post, $p_verify,   $pub, $this->ctrlVerification, false, $policies_verification),
         ];
     }
 
