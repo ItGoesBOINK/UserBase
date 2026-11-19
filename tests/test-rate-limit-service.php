@@ -12,6 +12,7 @@ use UserBase\Database\DatabaseProxy;
 use UserBase\Repository\RateLimitRepository;
 use UserBase\Security\RateLimit\RateLimitPolicy;
 use UserBase\Service\RateLimitService;
+use UserBase\Exception\RateLimitUnavailableException;
 
 $clock = new SystemClock();
 $repo = new RateLimitRepository($pdo);
@@ -369,8 +370,8 @@ try {
                 ]
             ]);
 
-        } catch (RuntimeException $e) {
-            $exceptionThrown = true;
+        } catch (RateLimitUnavailableException | RuntimeException $e) {
+             $exceptionThrown = true;
         }
 
         AssertTest(

@@ -11,6 +11,7 @@ use UserBase\Exception\EmailDeliveryException;
 use UserBase\Exception\AccountConflictException;
 use UserBase\Exception\CredentialConflictException;
 use UserBase\Exception\ValidationException;
+use UserBase\Exception\RateLimitUnavailableException;
 
 final class ExceptionHandler
 {
@@ -63,6 +64,19 @@ final class ExceptionHandler
             JsonResponse::Error(
                 'verification_email_failed',
                 'Your account was created, but we could not send the verification E-Mail.',
+                503
+            );
+        }
+
+        if ($err instanceof RateLimitUnavailableException) {
+            error_log(sprintf(
+                "UserBase Rate-Limit Service Unavailable: %s",
+                $err->getMessage()
+            ));
+
+            JsonResponse::Error(
+                'rate_limit_unavailable',
+                'Request Processing temporarily unavailable',
                 503
             );
         }

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace UserBase\Service;
 
+use Throwable;
 use RuntimeException;
+use PDO;
+use PDOException;
 use UserBase\Time\IClock;
 use UserBase\Repository\RateLimitRepository;
 use UserBase\Security\RateLimit\RateLimitPolicy;
 use UserBase\Security\RateLimit\RateLimitDecision;
+use UserBase\Exception\RateLimitUnavailableException;
 
 final class RateLimitService
 {
@@ -103,6 +107,7 @@ final class RateLimitService
         );
 
         $acquiredLocks = [];
+        $opErr = null;
 
         try {
 
@@ -117,7 +122,7 @@ final class RateLimitService
                 );
 
                 if (!$acquired) {
-                    throw new RuntimeException('Unable to acquire Rate-Limit Lock');
+                    throw new RateLimitUnavailableException('Unable to acquire Rate-Limit Lock');
                 }
 
                 $acquiredLocks[] = [
@@ -176,17 +181,44 @@ final class RateLimitService
                 $decisions[$policy->key] = new RateLimitDecision(true, $remainingAttempts);
             }
 
-            return $decisions;
+            //return $decisions;
 
-        } finally {
-            // Release Locks in reverse acquisition order
-            foreach (array_reverse($acquiredLocks) as $lock) {
+        } catch (Throwable $err) {
+            $opErr = $err;
+        }
+
+        // Release every acquired lock, even if one release fails
+        $releaseErr = null;
+
+        // Release Locks in reverse acquisition order
+        foreach (array_reverse($acquiredLocks) as $lock) {
+            try {
                 $this->rateLimitRepo->ReleaseLock(
                     $lock['policyKey'],
                     $lock['subjectHash']
                 );
+            } catch (Throwable $err) {
+                $releaseErr ??= $err;
             }
         }
+
+        // Preserve the original operation failure if one occurred
+        if ($opErr !== null) {
+            if ($opErr instanceof RateLimitUnavailableException) { throw $opErr; }
+
+            if ($opErr instanceof PDOException || $opErr instanceof RuntimeException) {
+                throw new RateLimitUnavailableException('Rate-Limit Service Operation Failed', 0, $opErr);
+            }
+
+            throw $opErr;
+        }
+
+        // A release failure is itself an infrastructure failure
+        if ($releaseErr !== null) {
+            throw new RateLimitUnavailableException('Unable to release Rate-Limit Lock', 0, $releaseErr);
+        }
+
+        return $decisions;
     }
 }
 

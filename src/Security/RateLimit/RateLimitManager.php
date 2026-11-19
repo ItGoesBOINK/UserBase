@@ -12,7 +12,7 @@ final class RateLimitManager
     public readonly RateLimitPolicyRegistry $policies;
     public readonly RateLimitSubjectResolverRegistry $resolvers;
 
-    public function __construct(Configuration $config)
+    public function __construct(private Configuration $config)
     {
         $this->policies = new RateLimitPolicyRegistry();
         $this->resolvers = new RateLimitSubjectResolverRegistry();
@@ -35,6 +35,12 @@ final class RateLimitManager
         if ($this->FindResolver($subjectType) === null) {
             throw new InvalidArgumentException(
                 "No Resolver is registered for Rate-Limit Subject-Type [{$subjectType}]"
+            );
+        }
+
+        if ($interval < $this->config->rateLimitMaxRetentionHours) {
+            throw new InvalidArgumentException(
+                "Invalid Rate-Limit retention window: [{$interval}]"
             );
         }
 

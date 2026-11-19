@@ -131,6 +131,38 @@ class DefaultRouteModule extends RouteModule
         );
 
 
+        // Logout Rate-Limit Policies
+        $policyKey_logoutIP = 'logout:ip';
+        $policyKey_logoutAccount = 'logout:account';
+        $policies_logout = [$policyKey_logoutIP, $policyKey_logoutAccount];
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_logoutIP, 10, $t_min5,
+            $rateLimit_clientIP
+        );
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_logoutAccount, 10, $t_min5,
+            $rateLimit_accountID
+        );
+
+
+        // ID Rate-Limit Policies
+        $policyKey_idIP = 'id:ip';
+        $policyKey_idAccount = 'id:account';
+        $policies_id = [$policyKey_idIP, $policyKey_idAccount];
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_idIP, 10, $t_min5,
+            $rateLimit_clientIP
+        );
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_idAccount, 10, $t_min5,
+            $rateLimit_accountID
+        );
+
+
         // Registration Rate-Limit Policies
         $policyKey_registrationIP = 'registration:ip';
         $policies_registration = [$policyKey_registrationIP];
@@ -147,6 +179,16 @@ class DefaultRouteModule extends RouteModule
 
         $rateLimitManager->AddPolicy(
             $policyKey_verificationIP, 10, 300,
+            $rateLimit_clientIP
+        );
+
+
+        // Health-Check Rate-Limit Policies
+        $policyKey_healthIP = 'health:ip';
+        $policies_health = [$policyKey_healthIP];
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_healthIP, 10, 300,
             $rateLimit_clientIP
         );
 

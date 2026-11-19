@@ -17,6 +17,8 @@ require_once $d . '/src/bootstrap.php';
 //use UserBase\Tests\Out;
 use UserBase\Database\DatabaseProxy;
 
+$timestamp = gmdate('Y-m-d\TH:i:s\Z');
+
 try {
 
     $proxy = new DatabaseProxy($config);
@@ -28,6 +30,10 @@ try {
     // Delete expired events in manageable batches
     $batchSize = $config->rateLimitCleanup_CRONBatchSize;
     $totalDeleted = 0;
+
+    if ($batchSize < 1) {
+        throw new RuntimeException('Rate-Limit cleanup batch size must be greater than zero');
+    }
 
     do {
         $deleted = $connection->exec(
@@ -44,11 +50,12 @@ try {
 
     } while ($deleted === $batchSize);
 
-    $timestamp = gmdate('Y-m-d\TH:i:s\Z');
+
 
     echo "[{$timestamp}]: Rate-Limit Clean-Up Deleted {$totalDeleted} expired events.\n";
 
 } catch (Throwable $e) {
+    $timestamp = gmdate('Y-m-d\TH:i:s\Z');
     fwrite(STDERR, "[{$timestamp}]: Rate-Limit Cleanup Failed: [{$e->getMessage()}]\n");
     exit(1);
 }

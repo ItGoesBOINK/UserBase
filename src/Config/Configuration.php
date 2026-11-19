@@ -21,6 +21,7 @@ final class Configuration
 
     public readonly string $rateLimitKey;
     public readonly int $rateLimitCleanup_CRONBatchSize;
+    public readonly int $rateLimitMaxRetentionHours;
 
     public readonly SessionSettings $session;
 
@@ -56,6 +57,7 @@ final class Configuration
         $this->rateLimitKey = self::Required('RATELIMIT_KEY');
         $this->rateLimitCleanup_CRONBatchSize =
             self::RequiredInt("RATELIMIT_CRON_BATCH_SIZE");
+        $this->rateLimitMaxRetentionHours = max(24, self::RequiredInt("RATELIMIT_MAX_RETENTION_HOURS"));
 
         $this->smtpHost = self::Optional('SMTP_HOST');
         $this->smtpPort = self::OptionalPort('SMTP_PORT');

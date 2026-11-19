@@ -5,12 +5,18 @@ declare(strict_types=1);
 require_once __DIR__ . '/test_base.php';
 
 use InvalidArgumentException;
+use UserBase\Http\RequestContext;
 use UserBase\Security\RateLimit\RateLimitManager;
 use UserBase\Security\RateLimit\RateLimitSubjectType;
 use UserBase\Security\RateLimit\RateLimitPolicy;
 use UserBase\Security\RateLimit\ClientIPResolver;
 use UserBase\Security\RateLimit\AccountIdentifierResolver;
 use UserBase\Security\RateLimit\RateLimitPolicyRegistry;
+use UserBase\Security\RateLimit\RateLimitSubjectResolverRegistry;
+use UserBase\Security\RateLimit\IRateLimitSubjectResolver;
+
+final class TestRateLimitSubjectResolver implements IRateLimitSubjectResolver
+{ public function Resolve(RequestContext $reqContext): ?string { return 'test-subject'; } }
 
 function AssertThrows(
     callable $action,
@@ -156,6 +162,59 @@ $manager->policies->Register(
 AssertTest(
     $manager->policies->Find('test:valid') !== null,
     'Policy Registry rejects an white-space only Subject-Type'
+);
+
+// Reject an empty subject type
+AssertThrows(
+    fn() => $manager->resolvers->Register(
+        '', new TestRateLimitSubjectResolver()
+    ),
+    'Resolver rejects an empty subject type'
+);
+
+// Reject a whitespace only subject type
+AssertThrows(
+    fn() => $manager->resolvers->Register(
+        '   ', new TestRateLimitSubjectResolver()
+    ),
+    'Resolver rejects an whitespace-only subject type'
+);
+
+// Reject duplicate subject types
+//$manager->resolvers->Register($t_clientIP, new TestRateLimitSubjectResolver());
+
+AssertThrows(
+    fn() => $manager->resolvers->Register(
+        $t_clientIP, new TestRateLimitSubjectResolver()
+    ),
+    'Resolver rejects duplicate subject types'
+);
+
+
+// Reject a missing resolver
+AssertThrows(
+    fn() => $manager->AddPolicy(
+        'test:missing-resolver', 5, 300,
+        'MissingResolver'
+    ),
+    'RateLimitManager rejects policies with un-registered subject types'
+);
+
+
+// Accept a registered resolver
+$key = 'test:valid-manager-policy';
+$manager->AddPolicy($key, 5, 300, $t_clientIP);
+
+AssertTest(
+    $manager->FindPolicy($key) !== null,
+    "RateLimitManager accepts policies with registered resolvers"
+);
+
+
+// Reject duplicate policy registration
+AssertThrows(
+    fn() => $manager->AddPolicy($key, 10, 600, $t_clientIP),
+    'RateLimitManager rejects duplicate policy keys'
 );
 
 HandleComplete(__FILE__);
