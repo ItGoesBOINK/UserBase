@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace UserBase\Http;
 
+use RuntimeException;
+use UserBase\Time\IClock;
 use UserBase\Service\CSRFTokenService;
-use UserBase\Security\RateLimit\RateLimitManager
+use UserBase\Service\RateLimitService;
+use UserBase\Security\RateLimit\RateLimitManager;
 use UserBase\Security\Authentication\IAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialType;
 
@@ -14,13 +17,18 @@ final class RequestPipeline
     public function __construct(
         private readonly IAuthenticator $auth,
         private readonly CSRFTokenService $csrfTokenService,
-        private readonly RateLimitManager $rateLimitManager
+        private readonly RateLimitManager $rateLimitManager,
+        private readonly RateLimitService $rateLimitService,
+        private readonly IClock $clock
     ) {}
 
     public function Process(
         Route $route,
         RequestContext $reqContext
     ): void {
+
+        // Enforce Rate-Limits
+        $this->EnforceRateLimits($route, $reqContext);
 
         // Authenticate request
         $authResult = $this->auth->Authenticate($reqContext);
@@ -70,23 +78,92 @@ final class RequestPipeline
 
         $route->handler->Execute($authenticatedReqContext);
 
-        /*
-        $auth = $this->auth->Authenticate($context);
-        $context = $context->WithAuthentication($auth);
+    }
 
-        if (
-            $route->policy->authReq === AuthenticationRequirement::Required &&
-            !$auth->IsAuthenticated()
-        ) {
-            JsonResponse::Error(
-                APIErrors::CODE__AUTH_REQUIRED,
-                APIErrors::DESC__AUTH_REQUIRED,
-                401
-            );
+
+    private function EnforceRateLimits(
+        Route $route,
+        RequestContext $reqContext
+    ): void {
+        $attempts = [];
+
+        foreach ($route->policy->rateLimits as $policyKey) {
+
+            $policyDef = $this->rateLimitManager->FindPolicy($policyKey);
+
+            if ($policyDef === null) {
+                throw new RuntimeException("Unknown Rate-Limit Policy: {$policyKey}");
+            }
+
+            $resolver = $this->rateLimitManager->FindResolver($policyDef->subjectType);
+
+            if ($resolver === null) {
+                throw new RuntimeException("No Resolver registered for subject type: " . $policyDef->subjectType);
+            }
+
+            $subject = $resolver->Resolve($reqContext);
+
+            // A missing subject skips this particular policy
+            if ($subject === null) { continue; }
+
+            $attempts[] = [
+                'policy' => $policyDef->policy,
+                'subject' => $subject
+            ];
         }
 
-        $route->handler->Execute($context);
+        // No usable subjects means there is nothing to evaluate
+        if ($attempts === []) { return; }
+
+        $decisions = $this->rateLimitService->AttemptMultiple($attempts);
+
+        $rateLimited = false;
+        $retryAfter = 1;
+        $now = $this->clock->Now();
+
+        foreach ($decisions as $decision) {
+
+            if ($decision->allowed) continue;
+
+            $rateLimited = true;
+
+            if ($decision->retryAt === null) continue;
+
+            $seconds = (int)ceil(
+                (float)$decision->retryAt->format('U.u') -
+                (float)$now->format('U.u')
+            );
+
+            $retryAfter = max($retryAfter, $seconds);
+        }
+
+        if (!$rateLimited) return;
+
+        /*
+        $retryAt = null;
+
+        foreach ($decisions as $decision) {
+            if ($decision->allowed) { continue; }
+
+            if (
+                $decision->retryAt !== null &&
+                ($retryAt === null || $decision->retryAt > $retryAt)
+            ) {
+                $retryAt = $decision->retryAt;
+            }
+        }
+
+        if ($retryAt === null) { return; }
+
+        $retryAfter = max(1, $retryAt->getTimestamp() - $this->clock->Now()->getTimestamp());
         */
+
+        JsonResponse::Error(
+            APIErrors::CODE__RATE_LIMITED,
+            APIErrors::DESC__RATE_LIMITED,
+            429,
+            ['Retry-After' => (string)$retryAfter]
+        );
     }
 }
 

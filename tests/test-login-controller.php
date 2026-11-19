@@ -106,12 +106,12 @@ try {
         $json, $jsonHeaders
     );
 
+    //var_dump($defaultLogin);
+
     AssertTest(
         $defaultLogin['status'] === 200,
         'Login defaults to cookie transport'
     );
-
-    //var_dump($defaultLogin);
 
     AssertTest(
         isset($defaultLogin['body']['data']['message']) &&
@@ -226,6 +226,7 @@ try {
         $json, $jsonHeaders
     );
 
+    //var_dump($response);
     AssertTest(
         $response['status'] === 400,
         'Invalid Session Transport returns HTTP 400'
@@ -241,6 +242,8 @@ try {
         'POST', '/api/login',
         $json, $jsonHeaders
     );
+
+
 
     AssertTest(
         $response['status'] === 400,
@@ -287,9 +290,10 @@ try {
         $json, $jsonHeaders
     );
 
+    //var_dump($response);
     AssertTest(
         $response['status'] === 422,
-        'Invalid Login credentials returns HTTP 400'
+        'Invalid Login credentials returns HTTP 422'
     );
 
 

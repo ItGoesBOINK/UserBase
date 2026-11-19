@@ -12,6 +12,8 @@ use UserBase\Security\Authentication\SessionCredential;
 
 final class MockAuthenticator implements IAuthenticator
 {
+    public bool $wasCalled = false;
+
     public function __construct(
         private readonly AuthenticationContext $authContext,
         private readonly ?SessionCredential $credential = null
@@ -20,6 +22,7 @@ final class MockAuthenticator implements IAuthenticator
     public function Authenticate(
         RequestContext $reqContext
     ): AuthenticationResult {
+        $this->wasCalled = true;
         return new AuthenticationResult($this->authContext, $this->credential);
     }
 }

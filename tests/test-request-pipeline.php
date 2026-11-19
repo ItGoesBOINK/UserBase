@@ -6,6 +6,7 @@ require_once __DIR__ . '/test_base.php';
 require_once __DIR__ . '/TestController.php';
 require_once __DIR__ . '/MockAuthenticator.php';
 
+use UserBase\Time\SystemClock;
 use UserBase\Config\Configuration;
 use UserBase\Http\AuthenticationContext;
 use UserBase\Http\AuthenticationRequirement;
@@ -14,7 +15,10 @@ use UserBase\Http\RequestPipeline;
 use UserBase\Http\Route;
 use UserBase\Http\RoutePolicy;
 use UserBase\Service\CSRFTokenService;
+use UserBase\Service\RateLimitService;
 use UserBase\Security\Authentication\SessionCredentialType;
+use UserBase\Security\RateLimit\RateLimitManager;
+use UserBase\Repository\RateLimitRepository;
 use UserBase\Tests\MockAuthenticator;
 use UserBase\Tests\TestController;
 
@@ -59,18 +63,36 @@ function RunPipelineChild(string $authentication): array
 
 function TestRoutePolicy(
     Configuration $config,
+    PDO $connection,
     AuthenticationRequirement $authReq,
     AuthenticationContext $authContext,
     bool $expectedExecution,
     string $description
 ): void {
+
+    $clock = new SystemClock();
     $tokenService = new CSRFTokenService($config);
+    $rateLimitManager = new RateLimitManager($config);
     $authenticator = new MockAuthenticator($authContext);
-    $pipeline = new RequestPipeline($authenticator, $tokenService);
+    $rateLimitRepo = new RateLimitRepository($connection);
+    $rateLimitService = new RateLimitService(
+        $rateLimitRepo,
+        $clock,
+        $config->rateLimitKey
+    );
+
+    $pipeline = new RequestPipeline(
+        $authenticator,
+        $tokenService,
+        $rateLimitManager,
+        $rateLimitService,
+        $clock
+    );
+
     $controller = new TestController();
     $policy = new RoutePolicy($authReq);
     $route = new Route($controller, $policy);
-    $reqContext = new RequestContext('GET', '/api/test', [], []);
+    $reqContext = RequestContext::GetContext(null, 'GET', '/api/test');
 
     $pipeline->Process($route, $reqContext);
 
@@ -80,13 +102,12 @@ function TestRoutePolicy(
     );
 }
 
-
 $anonymous = AuthenticationContext::Anonymous();
 $authenticated = AuthenticationContext::Authenticated('test-user-123', SessionCredentialType::Cookie);
 
 // Public
 TestRoutePolicy(
-    $config,
+    $config, $pdo,
     AuthenticationRequirement::Public,
     $anonymous,
     true,   // Expected behavior
@@ -94,7 +115,7 @@ TestRoutePolicy(
 );
 
 TestRoutePolicy(
-    $config,
+    $config, $pdo,
     AuthenticationRequirement::Public,
     $authenticated,
     true,   // Expected behavior
@@ -104,7 +125,7 @@ TestRoutePolicy(
 
 // Optional
 TestRoutePolicy(
-    $config,
+    $config, $pdo,
     AuthenticationRequirement::Optional,
     $anonymous,
     true,   // Expected behavior
@@ -112,7 +133,7 @@ TestRoutePolicy(
 );
 
 TestRoutePolicy(
-    $config,
+    $config, $pdo,
     AuthenticationRequirement::Optional,
     $authenticated,
     true,   // Expected behavior
@@ -126,8 +147,7 @@ $output = $result['output'];
 $errors = $result['errors'];
 $exitCode = $result['exitCode'];
 
-//var_dump($output);
-//var_dump($errors);
+//var_dump($result);
 
 AssertTest(
     $exitCode === 0 &&

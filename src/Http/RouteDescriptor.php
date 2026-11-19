@@ -20,15 +20,15 @@ final class RouteDescriptor
 
         $allowed = ['GET', 'POST', 'OPTIONS'];
         $m = strtoupper($method);
-        if (!in_array($m, $allowed)) {
+        if (!in_array($m, $allowed, true)) {
             throw new InvalidArgumentException(
                 "Method [{$method}] is not allowed"
             );
         }
 
-        foreach ($this->rateLimits as $req)
+        foreach ($this->rateLimits as $policyKey)
         {
-            if (!is_string($req) || $req === '')  {
+            if (!is_string($policyKey) || $policyKey === '')  {
                 throw new InvalidArgumentException('Rate-Limits must contain RateLimitRequirement instances');
             }
         }

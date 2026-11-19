@@ -9,7 +9,7 @@ use UserBase\Config\Configuration;
 final class RateLimitManager
 {
     private readonly RateLimitPolicyRegistry $policies;
-    private readonly RateLimitSubjectResolverRegistry $resolvers
+    private readonly RateLimitSubjectResolverRegistry $resolvers;
 
     public function __construct(Configuration $config)
     {
@@ -35,6 +35,9 @@ final class RateLimitManager
     }
 
     public function FindPolicy(string $policyKey): ?RateLimitPolicyDefinition
+    { return $this->policies->Find($policyKey); }
+
+    public function FindResolver(string $subjectType): ?IRateLimitSubjectResolver
     { return $this->resolvers->Find($subjectType); }
 
 

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace UserBase\Security\RateLimit;
 
+use UserBase\Http\RequestContext;
+
 interface IRateLimitSubjectResolver
 {
-    public function Resolve(object $request): string;
+    public function Resolve(RequestContext $reqContext): ?string;
 }
 
 ?>

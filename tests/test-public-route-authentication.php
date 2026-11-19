@@ -12,16 +12,27 @@ use UserBase\Http\Route;
 use UserBase\Http\RoutePolicy;
 use UserBase\Http\IRequestHandler;
 use UserBase\Repository\AuthSessionRepository;
+use UserBase\Repository\RateLimitRepository;
 use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialResolver;
 use UserBase\Security\Cookies\SessionCookie;
+use UserBase\Security\RateLimit\RateLimitManager;
 use UserBase\Service\SessionService;
 use UserBase\Service\CSRFTokenService;
+use UserBase\Service\RateLimitService;
 use UserBase\Time\SystemClock;
 
 // Authentication Dependencies
 $clock = new SystemClock();
 $authSessionRepo = new AuthSessionRepository($pdo);
+
+$rateLimitRepo = new RateLimitRepository($pdo);
+$rateLimitService = new RateLimitService(
+    $rateLimitRepo,
+    $clock,
+    $config->rateLimitKey
+);
+
 $sessionService = new SessionService(
     $authSessionRepo,
     $clock,
@@ -36,8 +47,16 @@ $authenticator = new SessionAuthenticator(
     $credentialResolver
 );
 
+
+$rateLimitManager = new RateLimitManager($config);
 $tokenService = new CSRFTokenService($config);
-$pipeline = new RequestPipeline($authenticator, $tokenService);
+$pipeline = new RequestPipeline(
+    $authenticator,
+    $tokenService,
+    $rateLimitManager,
+    $rateLimitService,
+    $clock
+);
 
 // Test handler captures the resulting RequestContext
 $handler = new class implements IRequestHandler
@@ -54,8 +73,8 @@ $policy = new RoutePolicy(AuthenticationRequirement::Public);
 $route = new Route($handler, $policy);
 
 // Construct a request without credentials
-$reqContext = new RequestContext('GET', '/api/test', [], []);
-
+//$reqContext = new RequestContext('GET', '/api/test', [], []);
+$reqContext = RequestContext::GetContext(null, 'GET', '/api/test');
 $pipeline->Process($route, $reqContext);
 
 AssertTest(

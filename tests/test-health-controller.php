@@ -39,8 +39,16 @@ AssertTest(
 
 $response = json_decode($body, true);
 
+$err = json_last_error();
+
+/*
+var_dump($body);
+var_dump($response);
+var_dump($err);
+*/
+
 AssertTest(
-    json_last_error() === JSON_ERROR_NONE && is_array($response),
+    $err === JSON_ERROR_NONE && is_array($response),
     'Health end-point returns valid JSON'
 );
 

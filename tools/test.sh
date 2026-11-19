@@ -12,6 +12,8 @@ footerBar="--------------------------------"
 rebuild=false
 logs=false
 clear=false
+flushEventsBefore=false
+flushEventsAfter=false
 
 header() {
   printf '%s %s %s\n\n' "$headerBar" "$1" "$headerBar"
@@ -26,6 +28,8 @@ if [[ "${1:-}" == "-a" ]]; then
   rebuild=true
   clear=true
   logs=true
+  flushEventsBefore=true
+  flushEventsAfter=true
   shift
 fi
 
@@ -44,12 +48,31 @@ if [[ "${1:-}" == "-l" ]]; then
   shift
 fi
 
+if [[ "${1:-}" == "-feb" ]]; then
+  flushEventsBefore=true
+  shift
+fi
+
+if [[ "${1:-}" == "-fea" ]]; then
+  flushEventsAfter=true
+  shift
+fi
+
+if [[ "${1:-}" == "-fe" ]]; then
+  flushEventsBefore=true
+  flushEventsAfter=true
+  shift
+fi
+
 if [[ $# -ne 1 ]]; then
   echo "Usage: $0 -a | -c | -r | -l <filename.php>" >&2
-  echo "-a All Options"
-  echo "-c Clear First"
-  echo "-r Rebuild"
-  echo "-l Show Logs After Test"
+  echo "-a   All Options"
+  echo "-c   Clear First"
+  echo "-r   Rebuild"
+  echo "-l   Show Logs After Test"
+  echo "-feb Flush Rate-Limit Events Table before Testing"
+  echo "-fea Flush Rate-Limit Events Table after Testing"
+  echo "-fe  Flush Rate-Limit Events Table before and after Testing"
   exit 1
 fi
 
@@ -78,6 +101,10 @@ if [[ "$rebuild" == true ]]; then
   fi
 fi
 
+if [[ "$flushEventsBefore" == true ]]; then
+  source "$SCRIPT_DIR/clear-rate-limits.sh"
+fi
+
 header "TEST"
 
 set +e
@@ -91,6 +118,10 @@ test_status=$?
 set -e
 
 footer
+
+if [[ "$flushEventsAfter" == true ]]; then
+  source "$SCRIPT_DIR/clear-rate-limits.sh"
+fi
 
 if [[ "$logs" == true ]]; then
   header "LOGS"

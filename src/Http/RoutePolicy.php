@@ -8,7 +8,8 @@ final readonly class RoutePolicy
 {
     public function __construct(
         public AuthenticationRequirement $authReq,
-        public bool $requiresCsrf = false
+        public bool $requiresCsrf = false,
+        public readonly array $rateLimits = []
     ) {}
 }
 

@@ -37,6 +37,7 @@ use UserBase\Repository\EmailVerificationTokenRepository;
 use UserBase\Security\Cookies\SessionCookie;
 use UserBase\Security\Authentication\SessionCredentialResolver;
 use UserBase\Security\RateLimit\RateLimitManager;
+use UserBase\Security\RateLimit\RateLimitSubjectType;
 
 class DefaultRouteModule extends RouteModule
 {
@@ -107,6 +108,20 @@ class DefaultRouteModule extends RouteModule
         $p_register = $api . 'register';
         $p_verify   = $api . 'verify';
 
+        $policyKey_loginIP = 'login:ip';
+        $policyKey_loginAccount = 'login:account';
+        $policies_login = [$policyKey_loginIP, $policyKey_loginAccount];
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_loginIP, 10, 300,
+            RateLimitSubjectType::ClientIP->name
+        );
+
+        $rateLimitManager->AddPolicy(
+            $policyKey_loginAccount, 10, 300,
+            RateLimitSubjectType::AccountIdentifier->name
+        );
+
         $this->emailSender = new PHPMailerEmailSender($config);
 
         $this->userRepo = new UserRepository($connection);
@@ -165,12 +180,12 @@ class DefaultRouteModule extends RouteModule
                 ($this->serviceEmailVerification);
 
         $this->descriptors = [
-            new RouteDescriptor($get,  $p_health,   $pub, $this->ctrlHealth),
-            new RouteDescriptor($get,  $p_id,       $req, $this->ctrlID),
-            new RouteDescriptor($post, $p_login,    $pub, $this->ctrlLogin),
-            new RouteDescriptor($post, $p_logout,   $pub, $this->ctrlLogout, true),
-            new RouteDescriptor($post, $p_register, $pub, $this->ctrlRegistration),
-            new RouteDescriptor($post, $p_verify,   $pub, $this->ctrlVerification),
+            new RouteDescriptor($get,  $p_health,   $pub, $this->ctrlHealth,       false, []),
+            new RouteDescriptor($get,  $p_id,       $req, $this->ctrlID,           false, []),
+            new RouteDescriptor($post, $p_login,    $pub, $this->ctrlLogin,        false, $policies_login),
+            new RouteDescriptor($post, $p_logout,   $pub, $this->ctrlLogout,       true,  []),
+            new RouteDescriptor($post, $p_register, $pub, $this->ctrlRegistration, false, []),
+            new RouteDescriptor($post, $p_verify,   $pub, $this->ctrlVerification, false, []),
         ];
     }
 

@@ -7,21 +7,31 @@ namespace UserBase\Core;
 use Throwable;
 use PDO;
 
-use UserBase\Database\DatabaseProxy;
-use UserBase\Service\SessionService;
-use UserBase\Service\CSRFTokenService;
-use UserBase\Repository\AuthSessionRepository;
-use UserBase\Config\Configuration;
-use UserBase\Config\SessionSettings;
-
 use UserBase\Time\IClock;
 use UserBase\Time\SystemClock;
 
+use UserBase\Config\Configuration;
+use UserBase\Config\SessionSettings;
+
+use UserBase\Database\DatabaseProxy;
+
+use UserBase\Service\SessionService;
+use UserBase\Service\CSRFTokenService;
+use UserBase\Service\RateLimitService;
+
+use UserBase\Repository\AuthSessionRepository;
+use UserBase\Repository\RateLimitRepository;
+
 use UserBase\Security\Cookies\SessionCookie;
+
 use UserBase\Security\Authentication\IAuthenticator;
 use UserBase\Security\Authentication\SessionAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialResolver;
+
 use UserBase\Security\RateLimit\RateLimitManager;
+use UserBase\Security\RateLimit\RateLimitSubjectType;
+use UserBase\Security\RateLimit\ClientIPResolver;
+use UserBase\Security\RateLimit\AccountIdentifierResolver;
 
 use UserBase\Http\ExceptionHandler;
 use UserBase\Http\CorsHandler;
@@ -171,14 +181,32 @@ class UserBase
     protected function InitRateLimitManager(): void
     {
         $this->rateLimitManager = new RateLimitManager($this->config);
+
+        $this->rateLimitManager->RegisterResolver(
+            RateLimitSubjectType::ClientIP->name,
+            new ClientIPResolver()
+        );
+
+        $this->rateLimitManager->RegisterResolver(
+            RateLimitSubjectType::AccountIdentifier->name,
+            new AccountIdentifierResolver()
+        );
     }
 
     protected function InitRouter(): void
     {
+        $rateLimitService = new RateLimitService(
+            new RateLimitRepository($this->connection),
+            $this->clock,
+            $this->config->rateLimitKey
+        );
+
         $this->pipeline = new RequestPipeline(
             $this->sessionAuthenticator,
             $this->csrfTokenService,
-            $this->rateLimitManager
+            $this->rateLimitManager,
+            $rateLimitService,
+            $this->clock
         );
 
         $this->router = new Router($this->pipeline);
@@ -192,14 +220,15 @@ class UserBase
         string $routePath,
         AuthenticationRequirement $authReq,
         IRequestHandler $handler,
-        bool $requiresCsrf = false
+        bool $requiresCsrf = false,
+        array $rateLimits = []
     ): void {
         $this->CheckCanRoute();
         $this->CheckValidMethod($method);
 
         $this->router->Add(
             $method, $routePath,
-            new Route($handler, new RoutePolicy($authReq, $requiresCsrf))
+            new Route($handler, new RoutePolicy($authReq, $requiresCsrf, $rateLimits))
         );
     }
 
@@ -207,18 +236,20 @@ class UserBase
         string $routePath,
         AuthenticationRequirement $authReq,
         IRequestHandler $handler,
-        bool $requiresCsrf = false
+        bool $requiresCsrf = false,
+        array $rateLimits = []
     ): void {
-        $this->AddRoute('GET', $routePath, $authReq, $handler, $requiresCsrf);
+        $this->AddRoute('GET', $routePath, $authReq, $handler, $requiresCsrf, $rateLimits);
     }
 
     public function AddPostRoute(
         string $routePath,
         AuthenticationRequirement $authReq,
         IRequestHandler $handler,
-        bool $requiresCsrf = false
+        bool $requiresCsrf = false,
+        array $rateLimits = []
     ): void {
-        $this->AddRoute('POST', $routePath, $authReq, $handler, $requiresCsrf);
+        $this->AddRoute('POST', $routePath, $authReq, $handler, $requiresCsrf, $rateLimits);
     }
 
     public function AddDefaultRoutes(): void
@@ -248,7 +279,8 @@ class UserBase
                 $d->path,
                 $d->authReq,
                 $d->handler,
-                $d->requiresCsrf
+                $d->requiresCsrf,
+                $d->rateLimits
             );
         }
     }
@@ -257,19 +289,10 @@ class UserBase
     {
         $this->CheckCanRoute();
 
-        /*
-        $method  = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri     = $_SERVER['REQUEST_URI']    ?? '/';
-        $cookies = $_COOKIE;
-        $headers = array_change_key_case(
-            getallheaders() ?: [], CASE_LOWER);
-
-        $reqContext = new RequestContext(
-            $method, $uri,
-            $headers, $cookies
-        );
-        */
-        $reqContext = RequestContext::GetActiveContext();
+        try
+        { $reqContext = RequestContext::GetActiveContext(); }
+        catch (Throwable $e)
+        { ExceptionHandler::Handle($e); }
 
         $this->router->Dispatch($reqContext);
     }

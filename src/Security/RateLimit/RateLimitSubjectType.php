@@ -7,7 +7,7 @@ namespace UserBase\Security\RateLimit;
 enum RateLimitSubjectType
 {
     case ClientIP;
-    case AccountID;
+    case AccountIdentifier;
 }
 
 ?>

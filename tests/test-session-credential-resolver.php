@@ -27,7 +27,8 @@ function CreateRequest(
     array $headers = [],
     array $cookies = []
 ): RequestContext {
-    return new RequestContext(
+    return RequestContext::GetContext(
+        clientIP: null,
         method: 'GET',
         requestURI: '/api/test',
         headers: $headers,

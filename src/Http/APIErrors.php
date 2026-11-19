@@ -11,6 +11,9 @@ final class APIErrors
 
     public const string CODE__CSRF_INVALID = 'CSRF_TOKEN_INVALID';
     public const string DESC__CSRF_INVALID = 'The CSRF Token is missing or invalid';
+
+    public const string CODE__RATE_LIMITED = 'RATE_LIMIT_EXCEEDED';
+    public const string DESC__RATE_LIMITED = 'Too many requests were made to the service';
 }
 
 ?>
