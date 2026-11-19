@@ -5,7 +5,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/test_base.php';
 require_once __DIR__ . '/Out.php';
 
-use RuntimeException;
 use UserBase\Tests\Out;
 use UserBase\Time\TimeUtility;
 use UserBase\Time\SystemClock;

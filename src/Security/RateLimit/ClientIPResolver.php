@@ -12,6 +12,7 @@ final class ClientIPResolver implements IRateLimitSubjectResolver
     public function Resolve(RequestContext $reqContext): ?string
     {
         $ip = $reqContext->clientIP;
+        //var_dump($ip);
 
         if (!filter_var($ip, FILTER_VALIDATE_IP))
         { throw new RuntimeException(

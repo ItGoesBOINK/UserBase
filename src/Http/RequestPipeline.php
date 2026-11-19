@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace UserBase\Http;
 
 use RuntimeException;
+use DateTimeImmutable;
 use UserBase\Time\IClock;
 use UserBase\Service\CSRFTokenService;
 use UserBase\Service\RateLimitService;
 use UserBase\Security\RateLimit\RateLimitManager;
+use UserBase\Security\RateLimit\RateLimitDecision;
 use UserBase\Security\Authentication\IAuthenticator;
 use UserBase\Security\Authentication\SessionCredentialType;
 
@@ -77,7 +79,21 @@ final class RequestPipeline
         }
 
         $route->handler->Execute($authenticatedReqContext);
+    }
 
+
+    public function CalculateRetryAfter(
+        RateLimitDecision $decision,
+        DateTimeImmutable $now
+    ): int {
+        if ($decision->retryAt === null) return 1;
+
+        $seconds = (int)ceil(
+            (float)$decision->retryAt->format('U.u') -
+            (float)$now->format('U.u')
+        );
+
+        return max(1, $seconds);
     }
 
 
@@ -127,6 +143,12 @@ final class RequestPipeline
 
             $rateLimited = true;
 
+            $retryAfter = max(
+                $retryAfter,
+                $this->CalculateRetryAfter($decision, $now)
+            );
+
+            /*
             if ($decision->retryAt === null) continue;
 
             $seconds = (int)ceil(
@@ -135,6 +157,7 @@ final class RequestPipeline
             );
 
             $retryAfter = max($retryAfter, $seconds);
+            */
         }
 
         if (!$rateLimited) return;

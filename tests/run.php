@@ -54,6 +54,8 @@ foreach ($testFiles as $testFile) {
         $failed++;
     }
 
+    require __DIR__ . '/../bin/clear-rate-limits.php';
+
     $index++;
 }
 
