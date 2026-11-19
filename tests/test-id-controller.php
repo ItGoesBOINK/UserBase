@@ -60,7 +60,7 @@ try {
         ]);
 
         $body = file_get_contents(
-            'http://userbase/api/id',
+            'http://userbase/id',
             false,
             $context
         );

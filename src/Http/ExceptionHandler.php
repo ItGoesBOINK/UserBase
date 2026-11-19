@@ -29,6 +29,34 @@ final class ExceptionHandler
 
     private static function Log(Throwable $err): void
     {
+        /*
+        // DEBUG ONLY
+        echo "\n\n<<<<<<<<<< ExceptionHandler::Log >>>>>>>>>>>\n\n";
+
+        $logFile = '/tmp/userbase-debug.log';
+
+        $message = sprintf(
+            "UserBase unhandled exception; %s in %s:%d\n%s\n",
+            $err->getMessage(),
+            $err->getFile(),
+            $err->getLine(),
+            $err->getTraceAsString()
+        );
+
+        $written = file_put_contents($logFile, $message, FILE_APPEND);
+
+        echo "\n--- LOG WRITE RESULT ---\n";
+        var_dump($written);
+
+        if ($written !== false) {
+            echo "\n--- SAVED LOG CONTENTS ---\n";
+            var_dump(file_get_contents($logFile));
+        } else {
+            echo "\n--- LOG WRITE FAILED ---\n";
+        }
+        */
+
+
         error_log(sprintf(
             "UserBase unhandled exception; %s in %s:%d\n%s",
             $err->getMessage(),
@@ -36,6 +64,7 @@ final class ExceptionHandler
             $err->getLine(),
             $err->getTraceAsString()
         ));
+
     }
 
     public static function Handle(Throwable $err): never

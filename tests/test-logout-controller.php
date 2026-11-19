@@ -81,8 +81,8 @@ try {
 
     $m_get = 'GET';
     $m_post = 'POST';
-    $p_id = '/api/id';
-    $p_logout = '/api/logout';
+    $p_id = '/id';
+    $p_logout = '/logout';
 
     // Create the repositories and service used to set up the test data
     $clock = new SystemClock();
@@ -163,7 +163,7 @@ try {
 
 
     // 4.  Log-out with a malformed token still succeeds
-    $malformed = $request($m_post, 'api/logout', 'invalid-token');
+    $malformed = $request($m_post, 'logout', 'invalid-token');
 
     AssertTest(
         $malformed['status'] === 200,
@@ -293,7 +293,7 @@ try {
     ]);
 
     $unsupportedBody = file_get_contents(
-        'http://userbase/api/id',
+        'http://userbase/id',
         false,
         $unsupportedScheme
     );

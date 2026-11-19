@@ -102,7 +102,7 @@ class DefaultRouteModule extends RouteModule
 
         $get = 'GET';
         $post = 'POST';
-        $api = '/api/';
+        $api = '/';
 
         $p_health   = $api . 'health';
         $p_id       = $api . 'id';

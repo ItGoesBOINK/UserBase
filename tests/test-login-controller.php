@@ -102,7 +102,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $defaultLogin = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -139,7 +139,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $cookieLogin = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -167,7 +167,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $bearerLogin = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -200,7 +200,7 @@ try {
 
     $bearerToken = $bearerLogin['body']['data']['session_token'];
     $authenticated = $Request(
-        'GET', '/api/id', null,
+        'GET', '/id', null,
         [
             'Authorization: Bearer ' . $bearerToken,
             'Accept: application/json'
@@ -222,7 +222,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $response = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -239,7 +239,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $response = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -257,7 +257,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $response = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -269,7 +269,7 @@ try {
     // 7	Invalid JSON
     //      expected: 400
     $response = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         '{invalid_jason', $jsonHeaders
     );
 
@@ -286,7 +286,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $response = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 
@@ -316,7 +316,7 @@ try {
     ], JSON_THROW_ON_ERROR);
 
     $response = $Request(
-        'POST', '/api/login',
+        'POST', '/login',
         $json, $jsonHeaders
     );
 

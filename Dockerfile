@@ -24,6 +24,15 @@ RUN sed -ri \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
 
+RUN echo '<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+    </Directory>' >> /etc/apache2/apache2.conf
+
+RUN echo '<Directory /var/www/>\n\
+    AllowOverride All\n\
+</Directory>' >> /etc/apache2/apache2.conf
+
 WORKDIR /var/www/html
 
 # Copy dependency manifests first to improve build caching

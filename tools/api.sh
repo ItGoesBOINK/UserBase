@@ -34,7 +34,7 @@ if [[ -z "$APP_URL" ]]; then
 fi
 
 # Remove trailing slash if present
-API_BASE_URL="${APP_URL%/}/api"
+API_BASE_URL="${APP_URL%/}"
 
 # ------------------------------------------------------
 # Defaults

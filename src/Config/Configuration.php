@@ -85,7 +85,7 @@ final class Configuration
     private const string off = 'off';
 
     public function GetAPIRootURL(): string
-    { return $this->appURL . '/' . $this->apiRoot . '/'; }
+    { return $this->appURL . '/' ; }
 
     public function GetEmailVerificationRouteURL(): string
     { return $this->GetAPIRootURL() . $this->verificationRoute; }
@@ -93,7 +93,7 @@ final class Configuration
     public function GetEmailVerificationPageURL(): string
     { return $this->uiURL . '/' . $this->verificationPage; }
 
-    public function HTTPS(): string { $_SERVER[self::HTTPS]; }
+    public function HTTPS(): string { return $_SERVER[self::HTTPS] ?? ''; }
 
     public function HasHttpsProp(): bool
     { return isset($_SERVER[self::HTTPS]); }
@@ -103,8 +103,9 @@ final class Configuration
 
     public function IsSecure(): bool
     {
-        return $this->HasHttpsProp() &&
-               $this->HttpsIsNotOff();
+        return ($this->HasHttpsProp() &&
+               $this->HttpsIsNotOff()) ||
+               (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] === '443');
     }
 
     public function IsEmailConfigured(): bool
