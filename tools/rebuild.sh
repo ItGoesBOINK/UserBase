@@ -16,22 +16,22 @@ elif [[ $# -gt 0 ]]; then
   exit 1
 fi
 
-# Rebuild the application image using the latest local source and configuration
-docker compose build userbase
-
-# Stop containers without removing persistent volumes
-docker compose down
-
 # Intentionally remove and re-create the database volume when requested
 if [[ "$REFRESH_DB" == true ]]; then
   echo "WARNING: Removing Docker volumes and refreshing the database!"
   docker compose down -v
+else
+  # Stop containers without removing persistent volumes
+  docker compose down
 fi
 
-# Recreate and start the application container in the background
-docker compose up -d # --no-deps userbase
+# Rebuild the application image using the latest local source and configuration
+docker compose build userbase
 
-# Show the current container status
-docker compose ps userbase
+# Recreate and start the application container in the background
+# docker compose up -d # --no-deps userbase
+
+# Restart
+./tools/restart.sh
 
 echo "UserBase container rebuilt and restarted."

@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-// use Throwable;
+//use Throwable;
+//use InvalidArgumentException;
 use UserBase\Config\SessionSettings;
 use UserBase\Http\RequestContext;
 use UserBase\Security\Authentication\SessionCredentialResolver;
@@ -108,10 +109,23 @@ AssertTest(
 
 
 // 8. Malformed Bearer Header
-$request = CreateRequest( headers: ['authorization' => 'Bearer'] );
+$rejected = false;
+$result = null;
+try {
+    $request = CreateRequest( headers: ['authorization' => 'Bearer'] );
+    $result = $resolver->Resolve($request);
+} catch (Throwable $e) {
+    if ($e instanceof InvalidArgumentException)
+    {
+        $rejected = true;
+    }
+}
+
+//echo ">>> Rejected: {$rejected}\n";
+//var_dump($result);
 
 AssertTest(
-    $resolver->Resolve($request) === null,
+    $rejected && $result === null,
     'Ignores malformed Bearer Header'
 );
 

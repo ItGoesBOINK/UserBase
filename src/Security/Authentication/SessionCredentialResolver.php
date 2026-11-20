@@ -43,10 +43,19 @@ final class SessionCredentialResolver
     private function GetBearerToken(RequestContext $reqContext): ?string
     {
         $auth = $reqContext->GetHeader('authorization');
-        $patt = '/^Bearer\s+(\S+)$/i';
-
         if ($auth === null) return null;
-        if (!preg_match($patt, trim($auth), $matches)) return null;
+
+        $auth = trim($auth);
+        //$patt_bearerMatch = '/\ABearer[ \t]+(\S+)\z/i';  //'/Bearer\s+(\S+)$/i';
+
+        if (!preg_match('/\ABearer\b/i', $auth)) {
+            return null;
+        }
+
+        //echo ">>> Token: {$auth}\n";
+        if (!preg_match('/\ABearer[ \t]+(\S+)\z/i', $auth, $matches)) {
+            throw new InvalidArgumentException('Malformed Bearer credential');
+        }
 
         return $matches[1];
     }
