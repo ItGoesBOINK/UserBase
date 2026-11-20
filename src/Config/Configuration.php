@@ -13,6 +13,10 @@ final class Configuration
     public readonly string $apiRoot;
     public readonly string $csrfKey;
 
+    public readonly bool $allowAuthCookie;
+    public readonly bool $allowAuthBearer;
+    public readonly bool $allowMultipleSessions;
+
     public readonly string $databaseHost;
     public readonly int $databasePort;
     public readonly string $databaseName;
@@ -45,6 +49,11 @@ final class Configuration
         $this->apiRoot = self::Required('API_ROOT');
         $this->verificationRoute = self::Required('VERIFICATION_ROUTE');
         $this->verificationPage = self::Required('VERIFICATION_PAGE');
+
+        $this->allowAuthCookie = self::RequiredBool("ALLOW_AUTH_COOKIE");
+        $this->allowAuthBearer = self::RequiredBool("ALLOW_AUTH_BEARER");
+        $this->allowMultipleSessions = self::RequiredBool("ALLOW_MULTIPLE_SESSIONS");
+
 
         $this->csrfKey = self::Required('CSRF_KEY');
 

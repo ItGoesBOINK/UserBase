@@ -265,7 +265,7 @@ try {
     $bearerTokenBoth = $sessionSvc->Create((string)$userID)->sessionToken;
 
     $bothCredentials = $request(
-        $m_get, $p_id,
+        $m_post, $p_logout,
         $cookieTokenBoth,
         $bearerTokenBoth
     );
