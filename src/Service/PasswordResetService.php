@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace UserBase\Service;
 
-use UserBase\Http\ExceptionHandler;
-use RuntimeException;
 use Throwable;
+use RuntimeException;
+use UserBase\Http\ExceptionHandler;
+use UserBase\Config\Configuration;
+use UserBase\Repository\UserRepository;
 
 final class PasswordResetService
 {
     public function __construct(
-        private readonly UserRepository $users,
-        private readonly SessionService $sessions
+        private readonly Configuration $config,
+        private readonly UserRepository $users
     ) {}
 }

@@ -70,6 +70,16 @@ final class SessionService
     }
 
     /**
+     * Revoke all active sessions belonging to a user
+     */
+    public function RevokeAllForUser(string $userID): int {
+        return $this->authSessionRepo->RevokeAllForUser(
+            $userID,
+            $this->clock->Now()
+        );
+    }
+
+    /**
      * Validate a raw session token and return its session data.
      */
     public function Validate(string $rawToken): ?array

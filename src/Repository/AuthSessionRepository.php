@@ -65,6 +65,27 @@ final class AuthSessionRepository
         return $sql->rowCount() === 1;
     }
 
+    /**
+     * Revoke all active sessions belonging to a user
+     */
+    public function RevokeAllForUser(
+        string $userID,
+        DateTimeImmutable $revokedAt
+    ): int {
+        $sql = $this->connection->prepare(
+            'UPDATE auth_sessions
+             SET revoked_at = :revoked_at
+             WHERE user_id = :user_id
+                AND revoked_at IS NULL'
+        );
+
+        $sql->execute([
+            'revoked_at' => TimeUtility::FormatTimestamp($revokedAt),
+            'user_id' => $userID
+        ]);
+
+        return $sql->rowCount();
+    }
 
     /**
      * Find an active session by its token hash.

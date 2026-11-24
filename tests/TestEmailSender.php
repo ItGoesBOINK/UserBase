@@ -28,6 +28,8 @@ final class TestEmailSender implements IEmailSender
         );
     }
 
+    public function SentEmailCount(): int { return count($this->sentEmails); }
+
     public function SendPasswordResetEmail(
         string $recipientEmail,
         string $recipientUsername,
@@ -61,7 +63,7 @@ final class TestEmailSender implements IEmailSender
     private function CheckShouldSimulateFailure(): void
     {
         if ($this->shouldFail)
-        { throw new EmailDeliveryException('Simulated E-Mail delivery failure'); }
+        { throw new EmailDeliveryException('>>>     Simulated E-Mail delivery failure [Success]'); }
     }
 }
 
