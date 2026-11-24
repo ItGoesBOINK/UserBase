@@ -46,7 +46,7 @@ try {
         new DateTimeZone('UTC')
     );
 
-    $validHash = hash('sha256', 'valid-reset-token', true);
+    $validHash = hash('sha256', 'valid-reset-token');
 
     $tokenID = $resetTokens->Create(
         $userID,
@@ -83,7 +83,7 @@ try {
 
     // 4. Expired tokens should not be found
 
-    $expiredHash = hash('sha256', 'expired-reset-token', true);
+    $expiredHash = hash('sha256', 'expired-reset-token');
 
     $resetTokens->Create(
         $userID,
@@ -129,9 +129,9 @@ try {
 
     // 8. Create outstanding tokens for invalidation tests
 
-    $invalidateHash1 = hash('sha256', 'invalidate-token-1', true);
-    $invalidateHash2 = hash('sha256', 'invalidate-token-2', true);
-    $otherUserHash = hash('sha256', 'other-user-token', true);
+    $invalidateHash1 = hash('sha256', 'invalidate-token-1');
+    $invalidateHash2 = hash('sha256', 'invalidate-token-2');
+    $otherUserHash = hash('sha256', 'other-user-token');
 
     $resetTokens->Create(
         $userID,

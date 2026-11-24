@@ -31,7 +31,7 @@ final class PHPMailerEmailSender implements IEmailSender {
             $recipientEmail,
             $recipientUsername,
             'Verify your E-Mail Address'
-        )
+        );
 
         $safeUsername = $this->GetSafeString($recipientUsername);
         $safeURL = $this->GetSafeString($verificationURL);

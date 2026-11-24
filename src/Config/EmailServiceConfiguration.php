@@ -53,7 +53,7 @@ final class EmailServiceConfiguration
             )
         );
 
-        if ($configuredCount > 0 && !$this->IsEmailConfigured()) {
+        if ($configuredCount > 0 && !$this->IsConfigured()) {
             throw new RuntimeException('SMTP configuration is incomplete.  Configure all required e-mail service settings.');
         }
     }

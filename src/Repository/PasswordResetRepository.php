@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace UserBase\Repository;
 
+use InvalidArgumentException;
 use DateTimeImmutable;
 use PDO;
 use UserBase\Time\TimeUtility;
+use UserBase\Security\TokenUtility;
 
 final class PasswordResetRepository
 {
     public function __construct(private readonly PDO $connection) {}
+
+    private function ToBinaryHash(string $tokenHash): string {
+        if (!TokenUtility::IsValidHash($tokenHash)) {
+            throw new InvalidArgumentException('Invalid Token Hash');
+        }
+        return TokenUtility::HashToBinary($tokenHash);
+    }
 
     public function Create(
         string $userID,
@@ -18,6 +27,7 @@ final class PasswordResetRepository
         DateTimeImmutable $expiresAt,
         DateTimeImmutable $createdAt
     ): string {
+        $binaryHash = $this->ToBinaryHash($tokenHash);
         $sql = $this->connection->prepare(
             'INSERT INTO password_reset_tokens
                 (user_id, token_hash, expires_at, created_at)
@@ -27,7 +37,7 @@ final class PasswordResetRepository
 
         $sql->execute([
             'user_id' => $userID,
-            'token_hash' => $tokenHash,
+            'token_hash' => $binaryHash,
             'expires_at' => TimeUtility::FormatTimestamp($expiresAt),
             'created_at' => TimeUtility::FormatTimestamp($createdAt)
         ]);
@@ -39,6 +49,7 @@ final class PasswordResetRepository
         string $tokenHash,
         DateTimeImmutable $now
     ): ?array {
+        $binaryHash = $this->ToBinaryHash($tokenHash);
         $sql = $this->connection->prepare(
             'SELECT id, user_id, expires_at
              FROM password_reset_tokens
@@ -49,7 +60,7 @@ final class PasswordResetRepository
         );
 
         $sql->execute([
-            'token_hash' => $tokenHash,
+            'token_hash' => $binaryHash,
             'now' => TimeUtility::FormatTimestamp($now)
         ]);
 
@@ -62,6 +73,7 @@ final class PasswordResetRepository
         string $tokenHash,
         DateTimeImmutable $now
     ): bool {
+        $binaryHash = $this->ToBinaryHash($tokenHash);
         $sql = $this->connection->prepare(
             'UPDATE password_reset_tokens
              SET consumed_at = :consumed_at
@@ -74,7 +86,7 @@ final class PasswordResetRepository
 
         $sql->execute([
             'consumed_at' => $timestamp,
-            'token_hash' => $tokenHash,
+            'token_hash' => $binaryHash,
             'now' => $timestamp
         ]);
 
