@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace UserBase\Mail;
 
 use RuntimeException;
+use PHPMailer\PHPMailer\PHPMailer;
 use UserBase\Exception\EmailDeliveryException;
 use UserBase\Config\Configuration;
-use UserBase\Service\IEmailSender;
-use PHPMailer\PHPMailer\PHPMailer;
+use UserBase\Config\EmailServiceConfiguration;
+use UserBase\Mail\IEmailSender;
 
 final class PHPMailerEmailSender implements IEmailSender {
 
@@ -25,46 +26,15 @@ final class PHPMailerEmailSender implements IEmailSender {
         string $verificationURL
     ): void {
 
-        $mail = new PHPMailer(true);
-
-        $mail->isSMTP();
-        $mail->Host = $this->config->smtpHost;
-        $mail->SMTPAuth = true;
-        $mail->Username = $this->config->smtpUsername;
-        $mail->Password = $this->config->smtpPassword;
-
-        // Use implicit TLS on port 465;  STARTTLS otherwise
-        $mail->SMTPSecure =
-            $this->config->smtpPort === 465
-                ? PHPMailer::ENCRYPTION_SMTPS
-                : PHPMailer::ENCRYPTION_STARTTLS;
-
-        $mail->Port = $this->config->smtpPort;
-
-        $mail->setFrom(
-            $this->config->mailFromAddress,
-            $this->config->mailFromName
-        );
-
-        $mail->addAddress(
+        $mail = $this->BuildMailer(
+            $this->config->accountVerificationEmailConfig,
             $recipientEmail,
-            $recipientUsername
-        );
-
-        $mail->isHTML(true);
-        $mail->Subject = 'Verify your E-Mail Address';
-
-        $safeUsername = htmlspecialchars(
             $recipientUsername,
-            ENT_QUOTES | ENT_SUBSTITUTE,
-            'UTF-8'
-        );
+            'Verify your E-Mail Address'
+        )
 
-        $safeURL = htmlspecialchars(
-            $verificationURL,
-            ENT_QUOTES | ENT_SUBSTITUTE,
-            'UTF-8'
-        );
+        $safeUsername = $this->GetSafeString($recipientUsername);
+        $safeURL = $this->GetSafeString($verificationURL);
 
         $mail->Body = "
             <p>Hello {$safeUsername},</p>
@@ -90,6 +60,103 @@ final class PHPMailerEmailSender implements IEmailSender {
                 $e
             );
         }
+    }
+
+
+
+    public function SendPasswordResetEmail(
+        string $recipientEmail,
+        string $recipientUsername,
+        string $resetURL
+    ): void {
+
+        $mail = $this->BuildMailer(
+            $this->config->passwordResetEmailConfig,
+            $recipientEmail,
+            $recipientUsername,
+            'Reset Your Password'
+        );
+
+        $safeUsername = $this->GetSafeString($recipientUsername);
+        $safeURL = $this->GetSafeString($resetURL);
+
+        $mail->Body = "
+            <p>Hello {$safeUsername},</p>
+            <p>A password reset was requested for your account.</p>
+            <p>
+                <a href=\"{$safeURL}\">Reset your password</a>
+            </p>
+            <p>
+                This link is valid for a limited time and can only be used once.
+                If you did not request a password reset, you can safely ignore
+                this email.
+            </p>
+        ";
+
+        $mail->AltBody =
+            "Hello {$recipientUsername},\n\n" .
+            "A password reset was requested for your account.\n\n" .
+            "Use this link to reset your password:\n" .
+            "{$resetURL}\n\n" .
+            "This link is valid for a limited time and can only be used once. " .
+            "If you did not request a password reset, you can safely ignore " .
+            "this email.";
+
+        try {
+            $mail->Send();
+        } catch (\PHPMailer\PHPMailer\Exception $e) {
+            throw new EmailDeliveryException(
+                'Failed to send password reset email',
+                0, $e
+            );
+        }
+    }
+
+    private function GetSafeString(string $str): string
+    {
+        return htmlspecialchars(
+           $str,
+           ENT_QUOTES | ENT_SUBSTITUTE,
+           'UTF-8'
+        );
+    }
+
+    private function BuildMailer(
+        EmailServiceConfiguration $emailConfig,
+        string $recipientEmail,
+        string $recipientUsername,
+        string $subject
+    ): PHPMailer {
+        $mail = new PHPMailer(true);
+
+        $mail->isSMTP();
+        $mail->Host = $emailConfig->smtpHost;
+        $mail->SMTPAuth = true;
+        $mail->Username = $emailConfig->smtpUsername;
+        $mail->Password = $emailConfig->smtpPassword;
+
+        // Use implicit TLS on port 465;  STARTTLS otherwise
+        $mail->SMTPSecure =
+            $emailConfig->smtpPort === 465
+                ? PHPMailer::ENCRYPTION_SMTPS
+                : PHPMailer::ENCRYPTION_STARTTLS;
+
+        $mail->Port = $emailConfig->smtpPort;
+
+        $mail->setFrom(
+            $emailConfig->senderEmailAddress,
+            $emailConfig->senderName
+        );
+
+        $mail->addAddress(
+            $recipientEmail,
+            $recipientUsername
+        );
+
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+
+        return $mail;
     }
 
 }

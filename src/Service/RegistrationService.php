@@ -7,7 +7,7 @@ namespace UserBase\Service;
 use PDOException;
 use UserBase\Config\Configuration;
 use UserBase\Service\EmailVerificationService;
-use UserBase\Service\IEmailSender;
+use UserBase\Mail\IEmailSender;
 use UserBase\Exception\AccountConflictException;
 use UserBase\Exception\ValidationException;
 use UserBase\Repository\UserRepository;

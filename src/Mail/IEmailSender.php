@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-namespace UserBase\Service;
+namespace UserBase\Mail;
 
 interface IEmailSender {
 
@@ -9,6 +9,12 @@ interface IEmailSender {
         string $recipientEmail,
         string $recipientUsername,
         string $verificationURL
+    ): void;
+
+    public function SendPasswordResetEmail(
+        string $recipientEmail,
+        string $recipientUsername,
+        string $resetURL
     ): void;
 
 }

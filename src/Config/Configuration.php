@@ -29,12 +29,17 @@ final class Configuration
 
     public readonly SessionSettings $session;
 
+    /*
     public readonly ?string $smtpHost;
     public readonly ?int $smtpPort;
     public readonly ?string $smtpUsername;
     public readonly ?string $smtpPassword;
     public readonly ?string $mailFromAddress;
     public readonly ?string $mailFromName;
+    */
+
+    public readonly EmailServiceConfiguration $accountVerificationEmailConfig;
+    public readonly EmailServiceConfiguration $passwordResetEmailConfig;
 
     public readonly ?string $verificationUrlBase;
     public readonly ?string $verificationRoute;
@@ -47,8 +52,6 @@ final class Configuration
         $this->appURL = self::Required('APP_URL');
         $this->uiURL = self::Required('UI_URL');
         $this->apiRoot = self::Required('API_ROOT');
-        $this->verificationRoute = self::Required('VERIFICATION_ROUTE');
-        $this->verificationPage = self::Required('VERIFICATION_PAGE');
 
         $this->allowAuthCookie = self::RequiredBool("ALLOW_AUTH_COOKIE");
         $this->allowAuthBearer = self::RequiredBool("ALLOW_AUTH_BEARER");
@@ -66,14 +69,41 @@ final class Configuration
         $this->rateLimitKey = self::Required('RATELIMIT_KEY');
         $this->rateLimitCleanup_CRONBatchSize =
             self::RequiredInt("RATELIMIT_CRON_BATCH_SIZE");
-        $this->rateLimitMaxRetentionHours = max(24, self::RequiredInt("RATELIMIT_MAX_RETENTION_HOURS"));
+        $this->rateLimitMaxRetentionHours =
+            max(24, self::RequiredInt("RATELIMIT_MAX_RETENTION_HOURS"));
 
+        /*
         $this->smtpHost = self::Optional('SMTP_HOST');
         $this->smtpPort = self::OptionalPort('SMTP_PORT');
         $this->smtpUsername = self::Optional('SMTP_USERNAME');
         $this->smtpPassword = self::Optional('SMTP_PASSWORD');
         $this->mailFromAddress = self::Optional('MAIL_FROM_ADDRESS');
         $this->mailFromName = self::Optional('MAIL_FROM_NAME');
+        */
+
+        $this->accountVerificationEmailConfig = new EmailServiceConfiguration(
+            self::Required('ACCOUNT_VERIFICATION__SERVICE_ROUTE'),
+            self::Required('ACCOUNT_VERIFICATION__CONFIRMATION_URL'),
+            self::Required('ACCOUNT_VERIFICATION__SMTP_HOST'),
+            self::RequiredPort('ACCOUNT_VERIFICATION__SMTP_PORT'),
+            self::Required('ACCOUNT_VERIFICATION__SMTP_USERNAME'),
+            self::Required('ACCOUNT_VERIFICATION__SMTP_PASSWORD'),
+            self::Required('ACCOUNT_VERIFICATION__SENDER_ADDRESS'),
+            self::Required('ACCOUNT_VERIFICATION__SENDER_NAME'),
+            self::RequiredInt('ACCOUNT_VERIFICATION__TOKEN_LIFETIME')
+        );
+
+        $this->passwordResetEmailConfig = new EmailServiceConfiguration(
+            self::Required('PASSWORD_RESET__SERVICE_ROUTE'),
+            self::Required('PASSWORD_RESET__CONFIRMATION_URL'),
+            self::Required('PASSWORD_RESET__SMTP_HOST'),
+            self::RequiredPort('PASSWORD_RESET__SMTP_PORT'),
+            self::Required('PASSWORD_RESET__SMTP_USERNAME'),
+            self::Required('PASSWORD_RESET__SMTP_PASSWORD'),
+            self::Required('PASSWORD_RESET__SENDER_ADDRESS'),
+            self::Required('PASSWORD_RESET__SENDER_NAME'),
+            self::RequiredInt('PASSWORD_RESET__TOKEN_LIFETIME')
+        );
 
         $this->session = new SessionSettings(
             self::Required('SESSION_COOKIE_NAME'),
@@ -93,14 +123,32 @@ final class Configuration
     private const string HTTPS = 'HTTPS';
     private const string off = 'off';
 
+
+
     public function GetAPIRootURL(): string
     { return $this->appURL . '/' ; }
 
+    private function GetRouteURL(EmailServiceConfiguration $emailConfig) : string
+    { return $this->GetAPIRootURL() . $this->emailConfig->serviceRoute; }
+
+    private function GetConfirmationURL(EmailServiceConfiguration $emailConfig) : string
+    { return $this->uiURL . '/' . $this->emailConfig->confirmationURL; }
+
+
+
     public function GetEmailVerificationRouteURL(): string
-    { return $this->GetAPIRootURL() . $this->verificationRoute; }
+    { return $this->GetRouteURL($this->accountVerificationEmailConfig); }
 
     public function GetEmailVerificationPageURL(): string
-    { return $this->uiURL . '/' . $this->verificationPage; }
+    { return $this->GetConfirmationURL($this->accountVerificationEmailConfig); }
+
+    public function GetPasswordResetRouteURL(): string
+    { return $this->GetRouteURL($this->passwordResetEmailConfig); }
+
+    public function GetPasswordResetPageURL(): string
+    { return $this->GetConfirmationURL($this->passwordResetEmailConfig); }
+
+
 
     public function HTTPS(): string { return $_SERVER[self::HTTPS] ?? ''; }
 
@@ -119,37 +167,20 @@ final class Configuration
 
     public function IsEmailConfigured(): bool
     {
-        return $this->smtpHost !== null &&
-               $this->smtpPort !== null &&
-               $this->smtpUsername !== null &&
-               $this->smtpPassword !== null &&
-               $this->mailFromAddress !== null &&
-               $this->mailFromName !== null;
+        return $this->IsAccountVerificationEmailConfigured() &&
+               $this->IsPasswordResetEmailConfigured();
     }
+
+    public function IsAccountVerificationEmailConfigured(): bool
+    { return $this->accountVerificationEmailConfig->IsConfigured(); }
+
+    public function IsPasswordResetEmailConfigured(): bool
+    { return $this->passwordResetEmailConfig->IsConfigured(); }
 
     private function ValidateSMTPConfiguration(): void
     {
-        $values = [
-            $this->smtpHost,
-            $this->smtpPort,
-            $this->smtpUsername,
-            $this->smtpPassword,
-            $this->mailFromAddress,
-            $this->mailFromName,
-        ];
-
-        $configuredCount = count
-        (
-            array_filter
-            (
-                $values,
-                static fn ($value): bool => $value !== null
-            )
-        );
-
-        if ($configuredCount > 0 && !$this->IsEmailConfigured()) {
-            throw new RuntimeException('SMTP configuration is incomplete.  Configure all required e-mail service settings.');
-        }
+        $this->accountVerificationEmailConfig->ValidateConfiguration();
+        $this->passwordResetEmailConfig->ValidateConfiguration();
     }
 
     private static function Required(string $name): string
