@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace UserSpace\Exception;
+namespace UserBase\Exception;
 use RuntimeException;
 
 final class EmailDeliveryException extends RuntimeException {}

@@ -129,10 +129,10 @@ final class Configuration
     { return $this->appURL . '/' ; }
 
     private function GetRouteURL(EmailServiceConfiguration $emailConfig) : string
-    { return $this->GetAPIRootURL() . $this->emailConfig->serviceRoute; }
+    { return $this->GetAPIRootURL() . $emailConfig->serviceRoute; }
 
     private function GetConfirmationURL(EmailServiceConfiguration $emailConfig) : string
-    { return $this->uiURL . '/' . $this->emailConfig->confirmationURL; }
+    { return $this->uiURL . '/' . $emailConfig->confirmationURL; }
 
 
 
